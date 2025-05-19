@@ -1,10 +1,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { Session, User } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
-import { User } from "../domains/auth/types";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { User as AppUser } from "../domains/auth/types";
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
+  session: Session | null;
   isLoading: boolean;
   error: Error | null;
   signOut: () => Promise<void>;
@@ -13,30 +17,89 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   
-  // This will be replaced with Supabase authentication once integrated
   const { isLoading, error } = useQuery({
-    queryKey: ["auth", "user"],
+    queryKey: ["auth", "session"],
     queryFn: async () => {
-      // Mock authentication for now
-      // This will be replaced with actual Supabase auth
       console.log("Fetching user session...");
-      return null;
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) throw error;
+      
+      return data.session;
     },
-    onSuccess: (data) => {
-      setUser(data);
-    },
+    onSettled: (data) => {
+      if (data) {
+        setSession(data);
+        if (data.user) {
+          // Obtener el perfil del usuario desde la tabla profiles
+          fetchUserProfile(data.user.id);
+        }
+      }
+    }
   });
 
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        setUser(data as AppUser);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log("Auth state changed:", event);
+        setSession(currentSession);
+        
+        if (currentSession?.user) {
+          // Usamos setTimeout para evitar posibles deadlocks con onAuthStateChange
+          setTimeout(() => {
+            fetchUserProfile(currentSession.user.id);
+          }, 0);
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    // Cleanup on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const signOut = async () => {
-    // Will be implemented with Supabase
-    setUser(null);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setSession(null);
+      toast.success("Sesión cerrada correctamente");
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error("Error al cerrar sesión");
+    }
   };
 
   // Value to be provided by the context
   const value = {
     user,
+    session,
     isLoading,
     error,
     signOut,

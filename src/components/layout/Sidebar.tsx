@@ -16,8 +16,11 @@ import {
   X,
   MessageSquare,
   BarChart3,
+  LogOut,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 type SidebarItem = {
   title: string;
@@ -28,7 +31,7 @@ type SidebarItem = {
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const isAdmin = user?.role === "admin" || user?.role === "admin:member";
   
@@ -99,6 +102,14 @@ export function Sidebar() {
     },
   ];
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      toast.error("Error al cerrar sesión");
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -150,22 +161,36 @@ export function Sidebar() {
         </nav>
       </div>
       <div className="p-4 border-t">
-        {!collapsed && (
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-              {user?.full_name?.charAt(0) || "U"}
+        {!collapsed && user ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-8 w-8 border border-gray-200">
+                <AvatarImage src={user.avatar_url || ""} alt={user.full_name || ""} />
+                <AvatarFallback className="bg-primary-100 text-primary-700">
+                  {user.full_name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">{user.full_name || "Usuario"}</span>
+                <span className="text-xs text-gray-500">{user.role || "Sin rol"}</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">{user?.full_name || "User"}</span>
-              <span className="text-xs text-gray-500">{user?.role || "No role"}</span>
-            </div>
+            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+              <LogOut size={18} />
+            </Button>
           </div>
-        )}
-        {collapsed && (
+        ) : (
           <div className="flex justify-center">
-            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-              {user?.full_name?.charAt(0) || "U"}
-            </div>
+            <Avatar className="h-8 w-8 border border-gray-200">
+              <AvatarFallback className="bg-primary-100 text-primary-700">
+                {user?.full_name?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+            {collapsed && (
+              <Button variant="ghost" size="icon" onClick={handleSignOut} className="ml-2">
+                <LogOut size={18} />
+              </Button>
+            )}
           </div>
         )}
       </div>
