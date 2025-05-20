@@ -26,7 +26,19 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Clients = () => {
-  const { clients, isLoading, createClient, updateClient, deleteClient, isCreating, isUpdating, isDeleting } = useClients();
+  const { 
+    clients, 
+    isLoading, 
+    createClient, 
+    updateClient, 
+    deleteClient, 
+    sendMagicLink,
+    isCreating, 
+    isUpdating, 
+    isDeleting,
+    isSendingMagicLink
+  } = useClients();
+  
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [currentClient, setCurrentClient] = useState<Client | null>(null);
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
@@ -57,6 +69,10 @@ export const Clients = () => {
 
   const handleDelete = (id: string) => {
     setClientToDelete(id);
+  };
+
+  const handleSendMagicLink = (email: string) => {
+    sendMagicLink(email);
   };
 
   const confirmDelete = () => {
@@ -114,6 +130,8 @@ export const Clients = () => {
           clients={clients}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onSendMagicLink={handleSendMagicLink}
+          isSendingMagicLink={isSendingMagicLink}
         />
       )}
 

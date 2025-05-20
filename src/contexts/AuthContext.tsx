@@ -30,11 +30,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return data.session;
     },
-    onSuccess: (data) => {
-      if (data) {
-        setSession(data);
-        if (data.user) {
-          fetchUserProfile(data.user.id);
+    meta: {
+      onSuccess: (data: Session | null) => {
+        if (data) {
+          setSession(data);
+          if (data.user) {
+            fetchUserProfile(data.user.id);
+          }
         }
       }
     }

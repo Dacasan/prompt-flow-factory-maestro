@@ -10,6 +10,7 @@ import { SubscriptionsTable } from "@/components/subscriptions/SubscriptionsTabl
 import { Button } from "@/components/ui/button";
 import { Loader2, PlusCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSubscriptions } from "@/domains/subscriptions/hooks/useSubscriptions";
 import {
   Sheet,
   SheetContent,
@@ -31,7 +32,9 @@ import {
 
 export const Services = () => {
   const { services, isLoading: isServicesLoading, createService, updateService, deleteService, isCreating: isCreatingService, isUpdating: isUpdatingService, isDeleting: isDeleting } = useServices();
+  const { subscriptions, isLoading: isSubscriptionsLoading, createSubscription, cancelSubscription, isCreating: isCreatingSubscription, isCanceling } = useSubscriptions();
   const { clients } = useClients();
+  
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [currentService, setCurrentService] = useState<Service | null>(null);
   const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
@@ -40,13 +43,14 @@ export const Services = () => {
   
   const recurringServices = services.filter(service => service.type === 'recurring');
   
-  const handleCreateServiceSubmit = (data: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleCreateServiceSubmit = (data: any) => {
     // Ensure required fields are present
     const serviceData = {
       ...data,
       name: data.name || "",
       price: data.price || 0,
       type: data.type || "one_time",
+      duration: data.duration || 30, // Setting a default duration
       is_active: true
     };
     
@@ -57,7 +61,7 @@ export const Services = () => {
     });
   };
 
-  const handleUpdateSubmit = (data: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleUpdateSubmit = (data: any) => {
     if (currentService) {
       // Ensure required fields are present
       const serviceData = {
@@ -65,6 +69,7 @@ export const Services = () => {
         name: data.name || "",
         price: data.price || 0,
         type: data.type || currentService.type,
+        duration: data.duration || 30, // Setting a default duration
         id: currentService.id
       };
 
@@ -75,6 +80,19 @@ export const Services = () => {
         }
       });
     }
+  };
+
+  const handleCreateSubscription = (data: {
+    client_id: string;
+    service_id: string;
+    current_period_start: string;
+    current_period_end: string;
+  }) => {
+    createSubscription(data, {
+      onSuccess: () => {
+        setIsSheetOpen(false);
+      }
+    });
   };
 
   const handleEdit = (service: Service) => {
@@ -115,30 +133,24 @@ export const Services = () => {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Services & Subscriptions</h1>
-      </div>
-      
-      <Tabs defaultValue="services" value={currentTab} onValueChange={setCurrentTab}>
-        <div className="flex justify-between mb-6">
-          <TabsList>
-            <TabsTrigger value="services">Services</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-          </TabsList>
-          
-          {currentTab === "services" ? (
-            <Button onClick={openCreateServiceSheet}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Service
-            </Button>
-          ) : (
-            <Button onClick={openCreateSubscriptionSheet}>
+        <h1 className="text-3xl font-bold">Services</h1>
+        <div className="flex gap-3">
+          <Button onClick={openCreateServiceSheet}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Service
+          </Button>
+          {recurringServices.length > 0 && (
+            <Button variant="outline" onClick={openCreateSubscriptionSheet}>
               <PlusCircle className="mr-2 h-4 w-4" />
               New Subscription
             </Button>
           )}
         </div>
-
-        <TabsContent value="services" className="mt-0">
+      </div>
+      
+      <div className="grid grid-cols-1 gap-6">
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Services</h2>
           {isServicesLoading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -150,12 +162,25 @@ export const Services = () => {
               onDelete={handleDelete}
             />
           )}
-        </TabsContent>
+        </div>
         
-        <TabsContent value="subscriptions" className="mt-0">
-          <SubscriptionsTable />
-        </TabsContent>
-      </Tabs>
+        {recurringServices.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Active Subscriptions</h2>
+            {isSubscriptionsLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <SubscriptionsTable 
+                subscriptions={subscriptions} 
+                onCancel={cancelSubscription}
+                isCanceling={isCanceling}
+              />
+            )}
+          </div>
+        )}
+      </div>
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="sm:max-w-md">
@@ -189,6 +214,8 @@ export const Services = () => {
               <SubscriptionForm
                 clients={clients}
                 services={recurringServices}
+                onSubscriptionCreate={handleCreateSubscription}
+                isSubmitting={isCreatingSubscription}
               />
             )}
           </div>

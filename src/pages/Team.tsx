@@ -18,7 +18,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 
 export const Team = () => {
-  const { teamMembers, isLoading, inviteTeamMember, isInviting } = useTeam();
+  const { 
+    teamMembers, 
+    isLoading, 
+    inviteTeamMember, 
+    isInviting,
+    sendMagicLink,
+    isSendingMagicLink
+  } = useTeam();
+  
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [invitationLink, setInvitationLink] = useState<string | null>(null);
 
@@ -28,6 +36,10 @@ export const Team = () => {
         setInvitationLink(response.inviteLink);
       }
     });
+  };
+
+  const handleSendMagicLink = (email: string) => {
+    sendMagicLink(email);
   };
 
   const onSheetClose = () => {
@@ -84,7 +96,11 @@ export const Team = () => {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <TeamMembersTable members={teamMembers} />
+        <TeamMembersTable 
+          members={teamMembers} 
+          onSendMagicLink={handleSendMagicLink}
+          isSendingMagicLink={isSendingMagicLink}
+        />
       )}
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -72,11 +71,6 @@ export function Sidebar() {
       title: "Invoices",
       href: "/invoices",
       icon: FileText,
-    },
-    {
-      title: "Subscriptions",
-      href: "/subscriptions",
-      icon: CreditCard,
     },
     {
       title: "Marketing",

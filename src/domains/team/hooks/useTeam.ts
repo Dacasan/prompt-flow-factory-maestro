@@ -37,19 +37,21 @@ export function useTeam() {
   });
 
   const inviteTeamMember = async (invitationData: InvitationData) => {
-    // First, let's create a user with email and password
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // First, let's create an email signup link
+    const { data: signupData, error: signupError } = await supabase.auth.admin.generateLink({
+      type: 'signup',
       email: invitationData.email,
       password: invitationData.password || Math.random().toString(36).substring(2, 12),
-      email_confirm: true,
-      user_metadata: {
-        full_name: invitationData.full_name || invitationData.email.split('@')[0],
-        role: invitationData.role
+      options: {
+        data: {
+          full_name: invitationData.full_name || invitationData.email.split('@')[0],
+          role: invitationData.role
+        }
       }
     });
     
-    if (authError) {
-      throw new Error(authError.message);
+    if (signupError) {
+      throw new Error(signupError.message);
     }
     
     // Generate invitation token
@@ -79,7 +81,10 @@ export function useTeam() {
     }
     
     // Return the invitation with a link
-    return { ...(data as Invitation), inviteLink: `${window.location.origin}/auth?token=${token}` };
+    return { 
+      ...(data as Invitation), 
+      inviteLink: signupData.properties?.action_link || `${window.location.origin}/auth?token=${token}` 
+    };
   };
 
   const inviteTeamMemberMutation = useMutation({
@@ -96,11 +101,37 @@ export function useTeam() {
     }
   });
 
+  // Send magic link to existing user
+  const sendMagicLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin
+      }
+    });
+
+    if (error) throw error;
+    
+    return { success: true, message: "Magic link sent successfully" };
+  };
+
+  const sendMagicLinkMutation = useMutation({
+    mutationFn: sendMagicLink,
+    onSuccess: () => {
+      toast.success(`Magic link sent successfully!`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Error sending magic link: ${error.message}`);
+    }
+  });
+
   return {
     teamMembers,
     isLoading,
     error,
     inviteTeamMember: inviteTeamMemberMutation.mutate,
     isInviting: inviteTeamMemberMutation.isPending,
+    sendMagicLink: sendMagicLinkMutation.mutate,
+    isSendingMagicLink: sendMagicLinkMutation.isPending
   };
 }

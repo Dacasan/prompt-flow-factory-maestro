@@ -48,20 +48,26 @@ export function useClients() {
     
     // Then create a user account if password is provided
     if (password) {
-      const { error: authError } = await supabase.auth.admin.createUser({
-        email: clientData.email,
-        password: password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: clientData.name,
-          role: 'client',
-          client_id: data.id
+      try {
+        // Generate a signup link
+        const { error: authError } = await supabase.auth.admin.generateLink({
+          type: 'signup',
+          email: clientData.email,
+          password: password,
+          options: {
+            data: {
+              full_name: clientData.name,
+              role: 'client',
+              client_id: data.id
+            }
+          }
+        });
+        
+        if (authError) {
+          // Since the client was created but user wasn't, we should handle this case
+          toast.error(`Client created but couldn't create user: ${authError.message}`);
         }
-      });
-      
-      if (authError) {
-        // Since the client was created but user wasn't, we should handle this case
-        // In a real app, you might want to delete the client or flag it for review
+      } catch (authError: any) {
         toast.error(`Client created but couldn't create user: ${authError.message}`);
       }
     }
@@ -75,7 +81,7 @@ export function useClients() {
       toast.success("Client created successfully");
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(`Error creating client: ${error.message}`);
     }
   });
@@ -101,22 +107,26 @@ export function useClients() {
     
     // Update user password if provided
     if (password) {
-      // Find the user associated with this client
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('client_id', id)
-        .single();
-      
-      if (profiles?.id) {
-        const { error: authError } = await supabase.auth.admin.updateUserById(
-          profiles.id,
-          { password }
-        );
+      try {
+        // Find the user associated with this client
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('client_id', id)
+          .single();
         
-        if (authError) {
-          toast.error(`Client updated but couldn't update password: ${authError.message}`);
+        if (profiles?.id) {
+          const { error: authError } = await supabase.auth.admin.updateUserById(
+            profiles.id,
+            { password }
+          );
+          
+          if (authError) {
+            toast.error(`Client updated but couldn't update password: ${authError.message}`);
+          }
         }
+      } catch (authError: any) {
+        toast.error(`Client updated but couldn't update password: ${authError.message}`);
       }
     }
     
@@ -129,7 +139,7 @@ export function useClients() {
       toast.success("Client updated successfully");
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(`Error updating client: ${error.message}`);
     }
   });
@@ -151,8 +161,32 @@ export function useClients() {
       toast.success("Client deleted successfully");
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(`Error deleting client: ${error.message}`);
+    }
+  });
+
+  // Send magic link to client
+  const sendMagicLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin
+      }
+    });
+
+    if (error) throw error;
+    
+    return { success: true, message: "Magic link sent successfully" };
+  };
+
+  const sendMagicLinkMutation = useMutation({
+    mutationFn: sendMagicLink,
+    onSuccess: () => {
+      toast.success(`Magic link sent successfully!`);
+    },
+    onError: (error: any) => {
+      toast.error(`Error sending magic link: ${error.message}`);
     }
   });
 
@@ -163,8 +197,10 @@ export function useClients() {
     createClient: createClientMutation.mutate,
     updateClient: updateClientMutation.mutate,
     deleteClient: deleteClientMutation.mutate,
+    sendMagicLink: sendMagicLinkMutation.mutate,
     isCreating: createClientMutation.isPending,
     isUpdating: updateClientMutation.isPending,
     isDeleting: deleteClientMutation.isPending,
+    isSendingMagicLink: sendMagicLinkMutation.isPending
   };
 }

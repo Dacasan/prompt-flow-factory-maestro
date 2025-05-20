@@ -8,6 +8,8 @@ import { Subscription } from "@/domains/subscriptions/types";
 export type ExtendedSubscription = Subscription & {
   clients?: { name: string; email: string };
   services?: { name: string; price: number; type: string };
+  current_period_start: string;
+  current_period_end: string;
 };
 
 export function useSubscriptions() {

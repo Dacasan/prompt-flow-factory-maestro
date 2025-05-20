@@ -9,7 +9,6 @@ import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import { useSubscriptions } from "@/domains/subscriptions/hooks/useSubscriptions";
 import { Client } from "@/domains/clients/types";
 import { Service } from "@/domains/services/types";
 
@@ -24,14 +23,21 @@ type SubscriptionFormValues = z.infer<typeof SubscriptionFormSchema>;
 interface SubscriptionFormProps {
   clients: Client[];
   services: Service[];
+  onSubscriptionCreate: (data: {
+    client_id: string;
+    service_id: string;
+    current_period_start: string;
+    current_period_end: string;
+  }) => void;
+  isSubmitting?: boolean;
 }
 
 export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   clients,
   services,
+  onSubscriptionCreate,
+  isSubmitting = false,
 }) => {
-  const { createSubscription, isCreating } = useSubscriptions();
-  
   const form = useForm<SubscriptionFormValues>({
     resolver: zodResolver(SubscriptionFormSchema),
     defaultValues: {
@@ -49,8 +55,9 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   endDate.setMonth(endDate.getMonth() + 1);
   
   const handleSubmit = (data: SubscriptionFormValues) => {
-    createSubscription({
-      ...data,
+    onSubscriptionCreate({
+      client_id: data.client_id,
+      service_id: data.service_id,
       current_period_start: startDate.toISOString(),
       current_period_end: endDate.toISOString(),
     });
@@ -132,8 +139,8 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
           </Card>
         )}
 
-        <Button type="submit" disabled={isCreating} className="w-full">
-          {isCreating ? (
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Creating subscription...

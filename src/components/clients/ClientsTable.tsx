@@ -9,29 +9,46 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Mail, MoreHorizontal, Pencil, Trash } from "lucide-react";
 
 interface ClientsTableProps {
   clients: Client[];
   onEdit: (client: Client) => void;
   onDelete: (id: string) => void;
+  onSendMagicLink?: (email: string) => void;
+  isSendingMagicLink?: boolean;
 }
 
 export const ClientsTable: React.FC<ClientsTableProps> = ({
   clients,
   onEdit,
   onDelete,
+  onSendMagicLink,
+  isSendingMagicLink = false
 }) => {
+  // Formatting function for phones
+  const formatPhone = (phone: string | null) => {
+    if (!phone) return "N/A";
+    return phone;
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Company Name</TableHead>
+            <TableHead className="w-[200px]">Company</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Phone</TableHead>
-            <TableHead>Created</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -47,26 +64,33 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({
               <TableRow key={client.id}>
                 <TableCell className="font-medium">{client.name}</TableCell>
                 <TableCell>{client.email}</TableCell>
-                <TableCell>{client.phone || "—"}</TableCell>
-                <TableCell>{new Date(client.created_at).toLocaleDateString()}</TableCell>
+                <TableCell>{formatPhone(client.phone)}</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(client)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(client.id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => onEdit(client)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onDelete(client.id)}>
+                        <Trash className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                      {onSendMagicLink && (
+                        <DropdownMenuItem onClick={() => onSendMagicLink(client.email)} disabled={isSendingMagicLink}>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Send Magic Link
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))
