@@ -37,9 +37,8 @@ export function useTeam() {
   });
 
   const inviteTeamMember = async (invitationData: InvitationData) => {
-    // First, let's create an email signup link
-    const { data: signupData, error: signupError } = await supabase.auth.admin.generateLink({
-      type: 'signup',
+    // Create user directly with signUp instead of using admin.generateLink
+    const { data: signupData, error: signupError } = await supabase.auth.signUp({
       email: invitationData.email,
       password: invitationData.password || Math.random().toString(36).substring(2, 12),
       options: {
@@ -83,7 +82,7 @@ export function useTeam() {
     // Return the invitation with a link
     return { 
       ...(data as Invitation), 
-      inviteLink: signupData.properties?.action_link || `${window.location.origin}/auth?token=${token}` 
+      inviteLink: `${window.location.origin}/auth?token=${token}`
     };
   };
 

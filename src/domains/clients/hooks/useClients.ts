@@ -49,9 +49,8 @@ export function useClients() {
     // Then create a user account if password is provided
     if (password) {
       try {
-        // Generate a signup link
-        const { error: authError } = await supabase.auth.admin.generateLink({
-          type: 'signup',
+        // Create user directly with signUp instead of using admin.generateLink
+        const { error: authError } = await supabase.auth.signUp({
           email: clientData.email,
           password: password,
           options: {
@@ -108,21 +107,19 @@ export function useClients() {
     // Update user password if provided
     if (password) {
       try {
-        // Find the user associated with this client
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('client_id', id)
-          .single();
+        // Find the user associated with this client's email
+        const { data: authUser, error: findError } = await supabase.auth.admin.getUserByEmail(
+          data.email
+        );
         
-        if (profiles?.id) {
-          const { error: authError } = await supabase.auth.admin.updateUserById(
-            profiles.id,
+        if (!findError && authUser?.user) {
+          const { error: updateError } = await supabase.auth.admin.updateUserById(
+            authUser.user.id,
             { password }
           );
           
-          if (authError) {
-            toast.error(`Client updated but couldn't update password: ${authError.message}`);
+          if (updateError) {
+            toast.error(`Client updated but couldn't update password: ${updateError.message}`);
           }
         }
       } catch (authError: any) {

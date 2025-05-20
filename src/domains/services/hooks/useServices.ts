@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Service, ServiceType } from "@/domains/services/types";
+import type { Service, ServiceFormValues } from "../types";
 
 export function useServices() {
   const queryClient = useQueryClient();
@@ -17,26 +17,33 @@ export function useServices() {
       throw new Error(error.message);
     }
     
-    return data as Service[];
+    // Transform the data to include is_active property for compatibility
+    const services = data.map(service => ({
+      ...service,
+      is_active: true // Default all services to active for backward compatibility
+    }));
+    
+    return services as Service[];
   };
-  
+
   const { data: services = [], isLoading, error } = useQuery({
     queryKey: ['services'],
     queryFn: getServices,
   });
-  
-  const createService = async (serviceData: {
-    name: string;
-    description?: string;
-    price: number;
-    duration: number;
-    type: ServiceType;
-    icon?: string;
-    is_active: boolean;
-  }) => {
+
+  const createService = async (serviceData: ServiceFormValues) => {
+    const { is_active, ...serviceDbData } = serviceData;
+    
     const { data, error } = await supabase
       .from('services')
-      .insert(serviceData)
+      .insert({
+        name: serviceDbData.name,
+        description: serviceDbData.description || null,
+        price: serviceDbData.price,
+        duration: serviceDbData.duration,
+        type: serviceDbData.type,
+        icon: serviceDbData.icon || null
+      })
       .select()
       .single();
     
@@ -44,35 +51,34 @@ export function useServices() {
       throw new Error(error.message);
     }
     
-    return data as Service;
+    // Add is_active field for frontend compatibility
+    return { ...data, is_active: true } as Service;
   };
-  
+
   const createServiceMutation = useMutation({
     mutationFn: createService,
     onSuccess: () => {
-      toast.success('Service created successfully');
+      toast.success("Service created successfully");
       queryClient.invalidateQueries({ queryKey: ['services'] });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast.error(`Error creating service: ${error.message}`);
     }
   });
-  
-  const updateService = async (serviceData: {
-    id: string;
-    name: string;
-    description?: string;
-    price: number;
-    duration: number;
-    type: ServiceType;
-    icon?: string;
-    is_active: boolean;
-  }) => {
-    const { id, ...rest } = serviceData;
+
+  const updateService = async (serviceData: ServiceFormValues & { id: string }) => {
+    const { id, is_active, ...data } = serviceData;
     
-    const { data, error } = await supabase
+    const { data: updatedService, error } = await supabase
       .from('services')
-      .update(rest)
+      .update({
+        name: data.name,
+        description: data.description || null,
+        price: data.price,
+        duration: data.duration,
+        type: data.type,
+        icon: data.icon || null
+      })
       .eq('id', id)
       .select()
       .single();
@@ -81,20 +87,21 @@ export function useServices() {
       throw new Error(error.message);
     }
     
-    return data as Service;
+    // Add is_active field for frontend compatibility
+    return { ...updatedService, is_active: true } as Service;
   };
-  
+
   const updateServiceMutation = useMutation({
     mutationFn: updateService,
     onSuccess: () => {
-      toast.success('Service updated successfully');
+      toast.success("Service updated successfully");
       queryClient.invalidateQueries({ queryKey: ['services'] });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast.error(`Error updating service: ${error.message}`);
     }
   });
-  
+
   const deleteService = async (id: string) => {
     const { error } = await supabase
       .from('services')
@@ -104,21 +111,19 @@ export function useServices() {
     if (error) {
       throw new Error(error.message);
     }
-    
-    return { id };
   };
-  
+
   const deleteServiceMutation = useMutation({
     mutationFn: deleteService,
     onSuccess: () => {
-      toast.success('Service deleted successfully');
+      toast.success("Service deleted successfully");
       queryClient.invalidateQueries({ queryKey: ['services'] });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast.error(`Error deleting service: ${error.message}`);
     }
   });
-  
+
   return {
     services,
     isLoading,
