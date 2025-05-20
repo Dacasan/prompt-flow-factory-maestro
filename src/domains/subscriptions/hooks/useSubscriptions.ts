@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Subscription } from "@/domains/subscriptions/types";
+import { useClients } from "@/domains/clients/hooks/useClients";
+import { useServices } from "@/domains/services/hooks/useServices";
 
 // Type for the extended subscription with related data
 export type ExtendedSubscription = Subscription & {
@@ -14,6 +16,8 @@ export type ExtendedSubscription = Subscription & {
 
 export function useSubscriptions() {
   const queryClient = useQueryClient();
+  const { clients } = useClients();
+  const { services } = useServices();
   
   const getSubscriptions = async () => {
     const { data, error } = await supabase
@@ -96,6 +100,8 @@ export function useSubscriptions() {
   
   return {
     subscriptions,
+    clients,
+    services,
     isLoading,
     error,
     createSubscription: createSubscriptionMutation.mutate,

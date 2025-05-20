@@ -67,7 +67,7 @@ export const Subscriptions = () => {
   };
 
   // Filter services to only show recurring ones
-  const recurringServices = services.filter(service => service.type === 'recurring');
+  const recurringServices = services?.filter(service => service.type === 'recurring') || [];
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -89,9 +89,9 @@ export const Subscriptions = () => {
             </SheetHeader>
             <div className="py-6">
               <SubscriptionForm
-                onSubmit={handleCreateSubmit}
-                clients={clients}
+                clients={clients || []}
                 services={recurringServices}
+                onSubscriptionCreate={handleCreateSubmit}
                 isSubmitting={isCreating}
               />
             </div>
@@ -107,6 +107,7 @@ export const Subscriptions = () => {
         <SubscriptionsTable
           subscriptions={subscriptions}
           onCancel={handleCancelSubscription}
+          isCanceling={isCanceling}
         />
       )}
 

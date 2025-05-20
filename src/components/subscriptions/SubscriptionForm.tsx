@@ -20,7 +20,7 @@ const SubscriptionFormSchema = z.object({
 
 type SubscriptionFormValues = z.infer<typeof SubscriptionFormSchema>;
 
-interface SubscriptionFormProps {
+export interface SubscriptionFormProps {
   clients: Client[];
   services: Service[];
   onSubscriptionCreate: (data: {
