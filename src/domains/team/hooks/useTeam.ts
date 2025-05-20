@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { TeamMember, InvitationData } from "../types";
+import type { TeamMember, InvitationData, Invitation } from "../types";
 
 export function useTeam() {
   const queryClient = useQueryClient();
@@ -18,7 +18,14 @@ export function useTeam() {
       throw new Error(error.message);
     }
     
-    return data as TeamMember[];
+    // Cast the data to TeamMember[] and ensure all required fields are present
+    const teamMembers = data?.map(profile => ({
+      ...profile,
+      email: profile.email || '', // Ensure email is defined
+      last_sign_in_at: profile.last_sign_in_at || null
+    })) as TeamMember[];
+    
+    return teamMembers;
   };
 
   const { data: teamMembers = [], isLoading, error } = useQuery({
@@ -39,12 +46,13 @@ export function useTeam() {
     // Create invitation
     const { data, error } = await supabase
       .from('invitations')
-      .insert([{
-        ...invitationData,
+      .insert({
+        email: invitationData.email,
+        role: invitationData.role,
         token,
         expires_at: expiresAt.toISOString(),
         invited_by: user.user?.id,
-      }])
+      })
       .select()
       .single();
     
@@ -54,7 +62,7 @@ export function useTeam() {
     
     // In a real application, you would send an email with the invitation link
     // For this demo, we'll just return the token
-    return { ...data, inviteLink: `${window.location.origin}/auth?token=${token}` };
+    return { ...(data as Invitation), inviteLink: `${window.location.origin}/auth?token=${token}` };
   };
 
   const inviteTeamMemberMutation = useMutation({
@@ -66,7 +74,7 @@ export function useTeam() {
       // In a real app, you'd send an email here
       console.log("Invitation link:", data.inviteLink);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Error inviting team member: ${error.message}`);
     }
   });

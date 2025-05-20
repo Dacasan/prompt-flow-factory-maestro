@@ -12,6 +12,8 @@ import { Auth } from "./pages/Auth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Clients } from "./pages/Clients";
 import { Team } from "./pages/Team";
+import { Services } from "./pages/Services";
+import { Subscriptions } from "./pages/Subscriptions";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,10 +30,10 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Rutas públicas */}
+            {/* Public routes */}
             <Route path="/auth" element={<Auth />} />
             
-            {/* Rutas protegidas */}
+            {/* Protected routes */}
             <Route path="/" element={
               <ProtectedRoute>
                 <AppLayout>
@@ -47,8 +49,10 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/services" element={
-              <ProtectedRoute>
-                <AppLayout><div>Services Page</div></AppLayout>
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout>
+                  <Services />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/orders" element={
@@ -72,8 +76,10 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/subscriptions" element={
-              <ProtectedRoute>
-                <AppLayout><div>Subscriptions Page</div></AppLayout>
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout>
+                  <Subscriptions />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/marketing" element={
@@ -99,7 +105,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Rutas de error */}
+            {/* Error routes */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

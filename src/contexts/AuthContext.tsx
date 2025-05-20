@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
@@ -29,11 +30,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return data.session;
     },
-    onSettled: (data) => {
+    onSuccess: (data) => {
       if (data) {
         setSession(data);
         if (data.user) {
-          // Obtener el perfil del usuario desde la tabla profiles
           fetchUserProfile(data.user.id);
         }
       }
@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(currentSession);
         
         if (currentSession?.user) {
-          // Usamos setTimeout para evitar posibles deadlocks con onAuthStateChange
+          // We use setTimeout to avoid potential deadlocks with onAuthStateChange
           setTimeout(() => {
             fetchUserProfile(currentSession.user.id);
           }, 0);

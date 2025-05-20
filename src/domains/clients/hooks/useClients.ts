@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +27,7 @@ export function useClients() {
   const createClient = async (clientData: ClientFormData) => {
     const { data, error } = await supabase
       .from('clients')
-      .insert([clientData])
+      .insert(clientData)
       .select()
       .single();
     
