@@ -2,15 +2,27 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ServiceSchema, ServiceType, ServiceTypeEnum } from "@/domains/services/types";
+import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ServiceType } from "@/domains/services/types";
 
-type ServiceFormValues = Omit<z.infer<typeof ServiceSchema>, 'id' | 'created_at' | 'updated_at'>;
+// Define the service form schema
+const ServiceFormSchema = z.object({
+  name: z.string().min(1, "Service name is required"),
+  description: z.string().optional(),
+  price: z.number().min(0, "Price must be a positive number"),
+  duration: z.number().min(1, "Duration must be at least 1 day"),
+  type: z.enum(["one_time", "recurring"]),
+  icon: z.string().optional().default("package"),
+  is_active: z.boolean().default(true),
+});
+
+type ServiceFormValues = z.infer<typeof ServiceFormSchema>;
 
 interface ServiceFormProps {
   onSubmit: (data: ServiceFormValues) => void;
@@ -32,7 +44,7 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
   isSubmitting = false,
 }) => {
   const form = useForm<ServiceFormValues>({
-    resolver: zodResolver(ServiceSchema.omit({ id: true, created_at: true, updated_at: true })),
+    resolver: zodResolver(ServiceFormSchema),
     defaultValues,
   });
 

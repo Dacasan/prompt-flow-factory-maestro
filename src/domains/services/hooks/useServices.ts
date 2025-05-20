@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Service, ServiceSchema } from "@/domains/services/types";
+import { Service, ServiceType } from "@/domains/services/types";
 
 export function useServices() {
   const queryClient = useQueryClient();
@@ -25,7 +25,15 @@ export function useServices() {
     queryFn: getServices,
   });
   
-  const createService = async (serviceData: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
+  const createService = async (serviceData: {
+    name: string;
+    description?: string;
+    price: number;
+    duration: number;
+    type: ServiceType;
+    icon?: string;
+    is_active: boolean;
+  }) => {
     const { data, error } = await supabase
       .from('services')
       .insert(serviceData)
@@ -50,7 +58,16 @@ export function useServices() {
     }
   });
   
-  const updateService = async (serviceData: Partial<Service> & { id: string }) => {
+  const updateService = async (serviceData: {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    duration: number;
+    type: ServiceType;
+    icon?: string;
+    is_active: boolean;
+  }) => {
     const { id, ...rest } = serviceData;
     
     const { data, error } = await supabase

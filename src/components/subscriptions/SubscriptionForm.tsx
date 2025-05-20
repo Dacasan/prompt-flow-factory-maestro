@@ -9,6 +9,9 @@ import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
+import { useSubscriptions } from "@/domains/subscriptions/hooks/useSubscriptions";
+import { Client } from "@/domains/clients/types";
+import { Service } from "@/domains/services/types";
 
 // Define subscription form schema
 const SubscriptionFormSchema = z.object({
@@ -19,21 +22,16 @@ const SubscriptionFormSchema = z.object({
 type SubscriptionFormValues = z.infer<typeof SubscriptionFormSchema>;
 
 interface SubscriptionFormProps {
-  onSubmit: (data: SubscriptionFormValues & {
-    current_period_start: string;
-    current_period_end: string;
-  }) => void;
-  clients: { id: string; name: string; email: string }[];
-  services: { id: string; name: string; price: number; type: string }[];
-  isSubmitting?: boolean;
+  clients: Client[];
+  services: Service[];
 }
 
 export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
-  onSubmit,
   clients,
   services,
-  isSubmitting = false,
 }) => {
+  const { createSubscription, isCreating } = useSubscriptions();
+  
   const form = useForm<SubscriptionFormValues>({
     resolver: zodResolver(SubscriptionFormSchema),
     defaultValues: {
@@ -51,7 +49,7 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   endDate.setMonth(endDate.getMonth() + 1);
   
   const handleSubmit = (data: SubscriptionFormValues) => {
-    onSubmit({
+    createSubscription({
       ...data,
       current_period_start: startDate.toISOString(),
       current_period_end: endDate.toISOString(),
@@ -134,8 +132,8 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
           </Card>
         )}
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? (
+        <Button type="submit" disabled={isCreating} className="w-full">
+          {isCreating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Creating subscription...

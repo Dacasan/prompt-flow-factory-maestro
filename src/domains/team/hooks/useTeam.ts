@@ -10,7 +10,7 @@ export function useTeam() {
   const getTeamMembers = async () => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, auth:id(email, last_sign_in_at)')
       .in('role', ['admin', 'admin:member'])
       .order('created_at', { ascending: false });
     
@@ -18,12 +18,15 @@ export function useTeam() {
       throw new Error(error.message);
     }
     
-    // Cast the data to TeamMember[] and ensure all required fields are present
-    const teamMembers = data?.map(profile => ({
-      ...profile,
-      email: profile.email || '', // Ensure email is defined
-      last_sign_in_at: profile.last_sign_in_at || null
-    })) as TeamMember[];
+    // Cast and transform the data to ensure all required fields are present
+    const teamMembers = data?.map(profile => {
+      const authData = (profile.auth || {}) as any;
+      return {
+        ...profile,
+        email: authData.email || '',
+        last_sign_in_at: authData.last_sign_in_at || null
+      };
+    }) as TeamMember[];
     
     return teamMembers;
   };
@@ -34,7 +37,22 @@ export function useTeam() {
   });
 
   const inviteTeamMember = async (invitationData: InvitationData) => {
-    // Generate a random token for invitation
+    // First, let's create a user with email and password
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: invitationData.email,
+      password: invitationData.password || Math.random().toString(36).substring(2, 12),
+      email_confirm: true,
+      user_metadata: {
+        full_name: invitationData.full_name || invitationData.email.split('@')[0],
+        role: invitationData.role
+      }
+    });
+    
+    if (authError) {
+      throw new Error(authError.message);
+    }
+    
+    // Generate invitation token
     const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     
     // Set expiration date (24 hours from now)
@@ -60,15 +78,14 @@ export function useTeam() {
       throw new Error(error.message);
     }
     
-    // In a real application, you would send an email with the invitation link
-    // For this demo, we'll just return the token
+    // Return the invitation with a link
     return { ...(data as Invitation), inviteLink: `${window.location.origin}/auth?token=${token}` };
   };
 
   const inviteTeamMemberMutation = useMutation({
     mutationFn: inviteTeamMember,
     onSuccess: (data) => {
-      toast.success(`Team member invited successfully! Token: ${data.token}`);
+      toast.success(`Team member invited successfully!`);
       queryClient.invalidateQueries({ queryKey: ['team'] });
       
       // In a real app, you'd send an email here

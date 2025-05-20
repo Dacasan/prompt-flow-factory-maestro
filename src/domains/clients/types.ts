@@ -9,6 +9,7 @@ export const ClientSchema = z.object({
   address: z.string().optional(),
   logo_url: z.string().url().nullable().optional(),
   stripe_customer_id: z.string().nullable().optional(),
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
 });
 
 export type ClientFormData = z.infer<typeof ClientSchema>;

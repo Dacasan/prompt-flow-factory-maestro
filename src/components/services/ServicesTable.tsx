@@ -12,7 +12,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 
 interface ServicesTableProps {
   services: Service[];
@@ -57,7 +56,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                 <TableCell className="text-right">${service.price.toFixed(2)}</TableCell>
                 <TableCell>{service.duration} days</TableCell>
                 <TableCell>
-                  <Badge variant={service.is_active ? "success" : "destructive"}>
+                  <Badge variant={service.is_active ? "outline" : "destructive"}>
                     {service.is_active ? 'Active' : 'Inactive'}
                   </Badge>
                 </TableCell>

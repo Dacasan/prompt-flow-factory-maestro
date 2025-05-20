@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Subscription } from "@/domains/subscriptions/types";
+import { useSubscriptions } from "@/domains/subscriptions/hooks/useSubscriptions";
 import {
   Table,
   TableBody,
@@ -11,39 +11,35 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Ban } from "lucide-react";
+import { Ban, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
-// Extended subscription type with related entities
-type ExtendedSubscription = Subscription & {
-  clients: { name: string; email: string };
-  services: { name: string; price: number; type: string };
-};
+export const SubscriptionsTable: React.FC = () => {
+  const { subscriptions, isLoading, cancelSubscription, isCanceling } = useSubscriptions();
 
-interface SubscriptionsTableProps {
-  subscriptions: ExtendedSubscription[];
-  onCancel: (id: string) => void;
-}
-
-export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
-  subscriptions,
-  onCancel,
-}) => {
   // Helper function to get badge variant based on status
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'active':
-        return <Badge variant="success">Active</Badge>;
+        return <Badge variant="outline">Active</Badge>;
       case 'canceled':
         return <Badge variant="destructive">Canceled</Badge>;
       case 'past_due':
-        return <Badge variant="warning">Past Due</Badge>;
+        return <Badge variant="secondary">Past Due</Badge>;
       case 'unpaid':
         return <Badge variant="secondary">Unpaid</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-md border">
@@ -73,15 +69,17 @@ export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
                 <TableCell>${subscription.services?.price.toFixed(2)}/month</TableCell>
                 <TableCell>{getStatusBadge(subscription.status || 'active')}</TableCell>
                 <TableCell>
-                  {format(new Date(subscription.current_period_start), 'MMM d')} - {format(new Date(subscription.current_period_end), 'MMM d, yyyy')}
+                  {format(new Date(subscription.current_period_start || new Date()), 'MMM d')} - 
+                  {format(new Date(subscription.current_period_end || new Date()), 'MMM d, yyyy')}
                 </TableCell>
                 <TableCell className="text-right">
                   {subscription.status === 'active' && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onCancel(subscription.id)}
+                      onClick={() => cancelSubscription(subscription.id)}
                       className="text-destructive"
+                      disabled={isCanceling}
                     >
                       <Ban className="mr-2 h-4 w-4" />
                       Cancel

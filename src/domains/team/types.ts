@@ -1,44 +1,37 @@
 
 import { z } from "zod";
-import { Role } from "../auth/types";
 
 export const TeamMemberSchema = z.object({
-  email: z.string().email("Valid email address is required"),
-  full_name: z.string().min(2, "Full name must be at least 2 characters"),
-  role: z.enum(["admin", "admin:member"], {
-    errorMap: () => ({ message: "Please select a valid role" }),
-  }),
+  id: z.string().uuid(),
+  full_name: z.string(),
+  role: z.string(),
+  avatar_url: z.string().nullable().optional(),
+  email: z.string().email(),
+  client_id: z.string().uuid().nullable().optional(),
+  last_sign_in_at: z.string().nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
 });
 
-export type TeamMemberFormData = z.infer<typeof TeamMemberSchema>;
-
-export interface TeamMember {
-  id: string;
-  email: string;
-  full_name: string;
-  role: Role;
-  avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
-  last_sign_in_at: string | null;
-}
+export type TeamMember = z.infer<typeof TeamMemberSchema>;
 
 export const InvitationSchema = z.object({
-  email: z.string().email("Valid email address is required"),
-  role: z.enum(["admin", "admin:member"], {
-    errorMap: () => ({ message: "Please select a valid role" }),
-  }),
+  id: z.string().uuid(),
+  email: z.string().email(),
+  role: z.string(),
+  token: z.string(),
+  client_id: z.string().uuid().nullable().optional(),
+  invited_by: z.string().uuid().nullable(),
+  expires_at: z.string().datetime(),
+  status: z.string().default("pending"),
+  created_at: z.string(),
 });
 
-export type InvitationData = z.infer<typeof InvitationSchema>;
+export type Invitation = z.infer<typeof InvitationSchema>;
 
-export interface Invitation {
-  id: string;
+export interface InvitationData {
   email: string;
-  role: Role;
-  status: 'pending' | 'accepted' | 'expired';
-  created_at: string;
-  expires_at: string;
-  token: string;
-  invited_by: string | null;
+  role: string;
+  full_name?: string;
+  password?: string;
 }

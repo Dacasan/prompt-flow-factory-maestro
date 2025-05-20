@@ -26,6 +26,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
       email: "",
       phone: "",
       address: "",
+      password: "",
       ...defaultValues,
     },
   });
@@ -55,6 +56,20 @@ export const ClientForm: React.FC<ClientFormProps> = ({
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input type="email" placeholder="company@example.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password (for client login)</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="Min. 6 characters" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

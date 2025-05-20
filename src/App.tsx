@@ -13,7 +13,6 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Clients } from "./pages/Clients";
 import { Team } from "./pages/Team";
 import { Services } from "./pages/Services";
-import { Subscriptions } from "./pages/Subscriptions";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,7 +77,7 @@ const App = () => (
             <Route path="/subscriptions" element={
               <ProtectedRoute requiredRole="admin">
                 <AppLayout>
-                  <Subscriptions />
+                  <Navigate to="/services" replace />
                 </AppLayout>
               </ProtectedRoute>
             } />

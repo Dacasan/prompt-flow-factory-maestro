@@ -4,6 +4,12 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Subscription } from "@/domains/subscriptions/types";
 
+// Type for the extended subscription with related data
+export type ExtendedSubscription = Subscription & {
+  clients?: { name: string; email: string };
+  services?: { name: string; price: number; type: string };
+};
+
 export function useSubscriptions() {
   const queryClient = useQueryClient();
   
@@ -21,51 +27,12 @@ export function useSubscriptions() {
       throw new Error(error.message);
     }
     
-    return data as (Subscription & {
-      clients: { name: string; email: string };
-      services: { name: string; price: number; type: string };
-    })[];
+    return data as ExtendedSubscription[];
   };
   
   const { data: subscriptions = [], isLoading, error } = useQuery({
     queryKey: ['subscriptions'],
     queryFn: getSubscriptions,
-  });
-
-  // Get client list for dropdowns
-  const getClients = async () => {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('id, name, email')
-      .order('name');
-    
-    if (error) throw new Error(error.message);
-    
-    return data;
-  };
-  
-  const { data: clients = [] } = useQuery({
-    queryKey: ['clients'],
-    queryFn: getClients,
-  });
-  
-  // Get service list for dropdowns
-  const getServices = async () => {
-    const { data, error } = await supabase
-      .from('services')
-      .select('id, name, price, type')
-      .eq('is_active', true)
-      .eq('type', 'recurring')
-      .order('name');
-    
-    if (error) throw new Error(error.message);
-    
-    return data;
-  };
-  
-  const { data: services = [] } = useQuery({
-    queryKey: ['services-for-subscriptions'],
-    queryFn: getServices,
   });
   
   const createSubscription = async (subscriptionData: {
@@ -74,7 +41,6 @@ export function useSubscriptions() {
     status?: string;
     current_period_start: string;
     current_period_end: string;
-    stripe_subscription_id?: string;
   }) => {
     const { data, error } = await supabase
       .from('subscriptions')
@@ -86,7 +52,7 @@ export function useSubscriptions() {
       throw new Error(error.message);
     }
     
-    return data;
+    return data as Subscription;
   };
   
   const createSubscriptionMutation = useMutation({
@@ -97,39 +63,6 @@ export function useSubscriptions() {
     },
     onError: (error: Error) => {
       toast.error(`Error creating subscription: ${error.message}`);
-    }
-  });
-  
-  const updateSubscription = async (subscriptionData: {
-    id: string;
-    status?: string;
-    current_period_end?: string;
-    stripe_subscription_id?: string;
-  }) => {
-    const { id, ...rest } = subscriptionData;
-    
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .update(rest)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) {
-      throw new Error(error.message);
-    }
-    
-    return data;
-  };
-  
-  const updateSubscriptionMutation = useMutation({
-    mutationFn: updateSubscription,
-    onSuccess: () => {
-      toast.success('Subscription updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-    },
-    onError: (error: Error) => {
-      toast.error(`Error updating subscription: ${error.message}`);
     }
   });
   
@@ -145,7 +78,7 @@ export function useSubscriptions() {
       throw new Error(error.message);
     }
     
-    return data;
+    return data as Subscription;
   };
   
   const cancelSubscriptionMutation = useMutation({
@@ -161,15 +94,11 @@ export function useSubscriptions() {
   
   return {
     subscriptions,
-    clients,
-    services,
     isLoading,
     error,
     createSubscription: createSubscriptionMutation.mutate,
-    updateSubscription: updateSubscriptionMutation.mutate,
     cancelSubscription: cancelSubscriptionMutation.mutate,
     isCreating: createSubscriptionMutation.isPending,
-    isUpdating: updateSubscriptionMutation.isPending,
     isCanceling: cancelSubscriptionMutation.isPending,
   };
 }

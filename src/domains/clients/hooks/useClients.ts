@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,14 +26,44 @@ export function useClients() {
   });
 
   const createClient = async (clientData: ClientFormData) => {
+    const { password, ...clientDbData } = clientData;
+    
+    // First create the client in the database
     const { data, error } = await supabase
       .from('clients')
-      .insert(clientData)
+      .insert({
+        name: clientDbData.name,
+        email: clientDbData.email,
+        phone: clientDbData.phone || null,
+        address: clientDbData.address || null,
+        logo_url: clientDbData.logo_url || null,
+        stripe_customer_id: null
+      })
       .select()
       .single();
     
     if (error) {
       throw new Error(error.message);
+    }
+    
+    // Then create a user account if password is provided
+    if (password) {
+      const { error: authError } = await supabase.auth.admin.createUser({
+        email: clientData.email,
+        password: password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: clientData.name,
+          role: 'client',
+          client_id: data.id
+        }
+      });
+      
+      if (authError) {
+        // Since the client was created but user wasn't, we should handle this case
+        // In a real app, you might want to delete the client or flag it for review
+        toast.error(`Client created but couldn't create user: ${authError.message}`);
+      }
     }
     
     return data as Client;
@@ -50,16 +81,43 @@ export function useClients() {
   });
 
   const updateClient = async (clientData: ClientFormData & { id: string }) => {
-    const { id, ...data } = clientData;
+    const { id, password, ...data } = clientData;
     const { data: updatedClient, error } = await supabase
       .from('clients')
-      .update(data)
+      .update({
+        name: data.name,
+        email: data.email,
+        phone: data.phone || null,
+        address: data.address || null,
+        logo_url: data.logo_url || null,
+      })
       .eq('id', id)
       .select()
       .single();
     
     if (error) {
       throw new Error(error.message);
+    }
+    
+    // Update user password if provided
+    if (password) {
+      // Find the user associated with this client
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('client_id', id)
+        .single();
+      
+      if (profiles?.id) {
+        const { error: authError } = await supabase.auth.admin.updateUserById(
+          profiles.id,
+          { password }
+        );
+        
+        if (authError) {
+          toast.error(`Client updated but couldn't update password: ${authError.message}`);
+        }
+      }
     }
     
     return updatedClient as Client;

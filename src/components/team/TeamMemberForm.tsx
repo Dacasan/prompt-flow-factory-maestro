@@ -2,15 +2,24 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { InvitationSchema, InvitationData } from "@/domains/team/types";
+import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const invitationFormSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  role: z.string().min(1, "Please select a role"),
+  full_name: z.string().optional(),
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+});
+
+type InvitationFormValues = z.infer<typeof invitationFormSchema>;
+
 interface TeamMemberFormProps {
-  onSubmit: (data: InvitationData) => void;
+  onSubmit: (data: InvitationFormValues) => void;
   isSubmitting?: boolean;
 }
 
@@ -18,11 +27,13 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
   onSubmit,
   isSubmitting = false,
 }) => {
-  const form = useForm<InvitationData>({
-    resolver: zodResolver(InvitationSchema),
+  const form = useForm<InvitationFormValues>({
+    resolver: zodResolver(invitationFormSchema),
     defaultValues: {
       email: "",
       role: "admin:member",
+      full_name: "",
+      password: "",
     },
   });
 
@@ -36,7 +47,35 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="team@example.com" {...field} />
+                <Input placeholder="team@example.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="full_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name (optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="Min. 6 characters" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -56,8 +95,8 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="admin">Administrator</SelectItem>
-                  <SelectItem value="admin:member">Team Member</SelectItem>
+                  <SelectItem value="admin:member">Admin Member</SelectItem>
+                  <SelectItem value="admin">Admin (Full Rights)</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -69,10 +108,10 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending invitation...
+              Sending Invitation...
             </>
           ) : (
-            "Invite Team Member"
+            "Send Invitation"
           )}
         </Button>
       </form>
