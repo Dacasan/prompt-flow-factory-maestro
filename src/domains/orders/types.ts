@@ -12,6 +12,7 @@ export const OrderSchema = z.object({
   service_id: z.string().uuid(),
   status: OrderStatusEnum.default("pending"),
   estimated_completion_date: z.string().datetime().optional(),
+  estimated_delivery_date: z.string().datetime().nullable().optional(), // Add this field
   actual_completion_date: z.string().datetime().nullable().optional(),
   stripe_payment_id: z.string().nullable().optional(),
   stripe_invoice_id: z.string().nullable().optional(),

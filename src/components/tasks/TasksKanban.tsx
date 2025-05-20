@@ -16,9 +16,10 @@ import {
 } from "@dnd-kit/sortable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskCard } from "./TaskCard";
+import { ExtendedTask } from "@/domains/tasks/hooks/useTasks";
 
 interface TasksKanbanProps {
-  tasks: any[];
+  tasks: ExtendedTask[];
   onDragEnd: (id: string, status: string) => void;
   isUpdating: boolean;
 }
@@ -78,7 +79,23 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
                 {todoTasks.map(task => (
                   <TaskCard 
                     key={task.id}
-                    task={task}
+                    task={{
+                      id: task.id,
+                      title: task.title,
+                      description: task.description,
+                      status: task.status,
+                      due_date: task.due_date,
+                      assignee: task.assignee ? {
+                        name: task.assignee.full_name,
+                        avatar_url: task.assignee.avatar_url
+                      } : undefined,
+                      order: task.order ? {
+                        id: task.order.id,
+                        client: task.order.clients ? {
+                          name: task.order.clients.name
+                        } : undefined
+                      } : undefined
+                    }}
                     disabled={isUpdating}
                   />
                 ))}
@@ -105,7 +122,23 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
                 {doingTasks.map(task => (
                   <TaskCard 
                     key={task.id}
-                    task={task}
+                    task={{
+                      id: task.id,
+                      title: task.title,
+                      description: task.description,
+                      status: task.status,
+                      due_date: task.due_date,
+                      assignee: task.assignee ? {
+                        name: task.assignee.full_name,
+                        avatar_url: task.assignee.avatar_url
+                      } : undefined,
+                      order: task.order ? {
+                        id: task.order.id,
+                        client: task.order.clients ? {
+                          name: task.order.clients.name
+                        } : undefined
+                      } : undefined
+                    }}
                     disabled={isUpdating}
                   />
                 ))}
@@ -132,7 +165,23 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
                 {doneTasks.map(task => (
                   <TaskCard 
                     key={task.id}
-                    task={task}
+                    task={{
+                      id: task.id,
+                      title: task.title,
+                      description: task.description,
+                      status: task.status,
+                      due_date: task.due_date,
+                      assignee: task.assignee ? {
+                        name: task.assignee.full_name,
+                        avatar_url: task.assignee.avatar_url
+                      } : undefined,
+                      order: task.order ? {
+                        id: task.order.id,
+                        client: task.order.clients ? {
+                          name: task.order.clients.name
+                        } : undefined
+                      } : undefined
+                    }}
                     disabled={isUpdating}
                   />
                 ))}
@@ -146,4 +195,4 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
       </div>
     </DndContext>
   );
-};
+}

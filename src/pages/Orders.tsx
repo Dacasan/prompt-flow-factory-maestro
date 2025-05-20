@@ -63,10 +63,6 @@ export const Orders = () => {
       });
     }
   };
-
-  const onSheetClose = () => {
-    setIsSheetOpen(false);
-  };
   
   // Convert ExtendedOrder[] to match OrdersTableProps format
   const formattedOrders = orders.map(order => ({
@@ -76,7 +72,7 @@ export const Orders = () => {
     service_id: order.service_id || '',
     total_amount: order.total_amount || 0,
     created_at: order.created_at || '',
-    estimated_delivery_date: order.estimated_delivery_date,
+    estimated_delivery_date: order.estimated_delivery_date || null,
     clients: order.clients,
     services: order.services
   }));

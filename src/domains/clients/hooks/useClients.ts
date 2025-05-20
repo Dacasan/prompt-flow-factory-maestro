@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,15 +108,20 @@ export function useClients() {
     // Update user password if provided
     if (password) {
       try {
-        // Find the user associated with this client's email via the auth API
-        const { data: authUserData } = await supabase.auth.admin.listUsers({
-          filters: {
-            email: data.email
-          }
+        // Find users associated with this client's email
+        const { data: users, error: userError } = await supabase.auth.admin.listUsers({
+          page: 1,
+          perPage: 100
         });
         
-        if (authUserData && authUserData.users && authUserData.users.length > 0) {
-          const user = authUserData.users[0];
+        if (userError) {
+          throw new Error(userError.message);
+        }
+        
+        // Find the user with the matching email
+        const user = users.users.find(u => u.email === data.email);
+        
+        if (user) {
           const { error: updateError } = await supabase.auth.admin.updateUserById(
             user.id,
             { password }

@@ -43,6 +43,17 @@ export const Tasks = () => {
     });
   };
 
+  // Transform orders to match the expected format
+  const formattedOrders = orders ? orders.map(order => ({
+    id: order.id || '',
+    clients: order.clients ? {
+      name: order.clients.name || ''
+    } : undefined,
+    services: order.services ? {
+      name: order.services.name || ''
+    } : undefined
+  })) : [];
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -63,7 +74,7 @@ export const Tasks = () => {
             </SheetHeader>
             <div className="py-6">
               <TaskForm
-                orders={orders || []}
+                orders={formattedOrders}
                 team={team || []}
                 onTaskCreate={handleCreateSubmit}
                 isSubmitting={isCreating}

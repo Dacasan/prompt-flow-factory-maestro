@@ -5,17 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTeam } from "@/domains/team/hooks/useTeam";
 import { useClients } from "@/domains/clients/hooks/useClients";
 import { useAuth } from "@/domains/auth/hooks/useAuth";
+import { Ticket } from "../types";
 
-export interface Ticket {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  client_id: string;
-  created_by?: string;
-  assigned_to?: string;
-  created_at: string;
-  updated_at: string;
+export interface ExtendedTicket extends Ticket {
   clients?: { 
     name: string; 
     email: string;
@@ -51,7 +43,8 @@ export function useTickets() {
       throw new Error(error.message);
     }
     
-    return data as Ticket[];
+    // Cast the data to ExtendedTicket[] to match the expected type
+    return data as unknown as ExtendedTicket[];
   };
   
   const { data: tickets = [], isLoading, error } = useQuery({
