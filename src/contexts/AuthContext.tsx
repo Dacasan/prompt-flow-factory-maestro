@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
@@ -30,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return data.session;
     },
-    onSuccess: (data) => {
+    onSettled: (data) => {
       if (data) {
         setSession(data);
         if (data.user) {

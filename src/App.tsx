@@ -10,6 +10,8 @@ import { Dashboard } from "./pages/Dashboard";
 import { NotFound } from "./pages/NotFound";
 import { Auth } from "./pages/Auth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { Clients } from "./pages/Clients";
+import { Team } from "./pages/Team";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,8 +40,10 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/clients" element={
-              <ProtectedRoute>
-                <AppLayout><div>Clients Page</div></AppLayout>
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout>
+                  <Clients />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/services" element={
@@ -78,8 +82,10 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/team" element={
-              <ProtectedRoute>
-                <AppLayout><div>Team Page</div></AppLayout>
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout>
+                  <Team />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/support" element={
