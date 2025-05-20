@@ -107,14 +107,17 @@ export function useClients() {
     // Update user password if provided
     if (password) {
       try {
-        // Find the user associated with this client's email
-        const { data: authUser, error: findError } = await supabase.auth.admin.getUserByEmail(
-          data.email
-        );
+        // Find the user associated with this client's email via the auth API
+        const { data: authUserData } = await supabase.auth.admin.listUsers({
+          filters: {
+            email: data.email
+          }
+        });
         
-        if (!findError && authUser?.user) {
+        if (authUserData && authUserData.users && authUserData.users.length > 0) {
+          const user = authUserData.users[0];
           const { error: updateError } = await supabase.auth.admin.updateUserById(
-            authUser.user.id,
+            user.id,
             { password }
           );
           

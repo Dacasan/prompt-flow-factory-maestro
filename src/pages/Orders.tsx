@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
-import { useOrders } from "@/domains/orders/hooks/useOrders";
-import { Order } from "@/domains/orders/types";
+import { useOrders, ExtendedOrder } from "@/domains/orders/hooks/useOrders";
 import { OrderForm } from "@/components/orders/OrderForm";
 import { OrdersTable } from "@/components/orders/OrdersTable";
 import { Button } from "@/components/ui/button";
@@ -68,6 +67,19 @@ export const Orders = () => {
   const onSheetClose = () => {
     setIsSheetOpen(false);
   };
+  
+  // Convert ExtendedOrder[] to match OrdersTableProps format
+  const formattedOrders = orders.map(order => ({
+    id: order.id || '',
+    status: order.status || 'pending',
+    client_id: order.client_id || '',
+    service_id: order.service_id || '',
+    total_amount: order.total_amount || 0,
+    created_at: order.created_at || '',
+    estimated_delivery_date: order.estimated_delivery_date,
+    clients: order.clients,
+    services: order.services
+  }));
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -105,7 +117,7 @@ export const Orders = () => {
         </div>
       ) : (
         <OrdersTable
-          orders={orders}
+          orders={formattedOrders}
           onCancel={handleCancel}
         />
       )}

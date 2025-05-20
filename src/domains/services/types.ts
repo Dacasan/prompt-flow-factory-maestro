@@ -5,6 +5,19 @@ import { z } from "zod";
 export const ServiceTypeEnum = z.enum(["one_time", "recurring"]);
 export type ServiceType = z.infer<typeof ServiceTypeEnum>;
 
+// Service form values
+export type ServiceFormValues = {
+  id?: string;
+  name: string;
+  description?: string;
+  price: number;
+  duration: number;
+  type: string;
+  icon?: string;
+  folder_id?: string | null;
+  is_active?: boolean;
+};
+
 // Service schema
 export const ServiceSchema = z.object({
   id: z.string().uuid(),

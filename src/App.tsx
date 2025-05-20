@@ -13,6 +13,9 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Clients } from "./pages/Clients";
 import { Team } from "./pages/Team";
 import { Services } from "./pages/Services";
+import { Orders } from "./pages/Orders";
+import { Tasks } from "./pages/Tasks";
+import { Tickets } from "./pages/Tickets";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,29 +59,22 @@ const App = () => (
             } />
             <Route path="/orders" element={
               <ProtectedRoute>
-                <AppLayout><div>Orders Page</div></AppLayout>
+                <AppLayout><Orders /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/tasks" element={
               <ProtectedRoute>
-                <AppLayout><div>Tasks Page</div></AppLayout>
+                <AppLayout><Tasks /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/tickets" element={
               <ProtectedRoute>
-                <AppLayout><div>Tickets Page</div></AppLayout>
+                <AppLayout><Tickets /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/invoices" element={
               <ProtectedRoute>
                 <AppLayout><div>Invoices Page</div></AppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/subscriptions" element={
-              <ProtectedRoute requiredRole="admin">
-                <AppLayout>
-                  <Navigate to="/services" replace />
-                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/marketing" element={

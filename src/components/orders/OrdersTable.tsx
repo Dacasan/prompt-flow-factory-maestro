@@ -36,7 +36,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onCancel }) =>
       case "in_progress":
         return "default";
       case "completed":
-        return "success";
+        return "secondary"; // Changed from "success" to "secondary"
       case "cancelled":
         return "destructive";
       default:
