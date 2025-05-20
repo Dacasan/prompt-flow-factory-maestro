@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return data.session;
     },
-    onSettled: (data) => {
+    onSuccess: (data) => {
       if (data) {
         setSession(data);
         if (data.user) {

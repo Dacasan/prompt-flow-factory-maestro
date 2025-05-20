@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 // Esquema para validación de formularios
 const loginSchema = z.object({
   email: z.string().email("Ingresa un correo electrónico válido"),
+  password: z.string().optional(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -25,6 +26,7 @@ export function Auth() {
   const { user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  const [showPasswordField, setShowPasswordField] = useState(false);
 
   const { register: loginRegister, handleSubmit: handleLoginSubmit, formState: { errors: loginErrors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -39,20 +41,33 @@ export function Auth() {
     return <Navigate to="/" />;
   }
 
-  // Función para iniciar sesión con email mágico
+  // Función para iniciar sesión con email mágico o contraseña
   const handleLogin = async (data: LoginFormData) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: data.email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast.success("Se ha enviado un enlace de acceso a tu correo");
+      if (showPasswordField && data.password) {
+        // Autenticación con email y contraseña
+        const { error } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        
+        if (error) throw error;
+        
+        toast.success("Sesión iniciada correctamente");
+      } else {
+        // Autenticación con email mágico
+        const { error } = await supabase.auth.signInWithOtp({
+          email: data.email,
+          options: {
+            emailRedirectTo: window.location.origin,
+          }
+        });
+        
+        if (error) throw error;
+        
+        toast.success("Se ha enviado un enlace de acceso a tu correo");
+      }
     } catch (error: any) {
       console.error("Error de inicio de sesión:", error);
       toast.error(error.message || "Error al iniciar sesión");
@@ -86,6 +101,11 @@ export function Auth() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Función para alternar la visualización del campo de contraseña
+  const togglePasswordField = () => {
+    setShowPasswordField(!showPasswordField);
   };
 
   if (isLoading) {
@@ -133,14 +153,42 @@ export function Auth() {
                     <p className="text-sm text-red-500">{loginErrors.email.message}</p>
                   )}
                 </div>
+                
+                {showPasswordField && (
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Contraseña</Label>
+                    <Input
+                      id="login-password"
+                      placeholder="Ingresa tu contraseña"
+                      type="password"
+                      autoComplete="current-password"
+                      {...loginRegister("password")}
+                    />
+                    {loginErrors.password && (
+                      <p className="text-sm text-red-500">{loginErrors.password.message}</p>
+                    )}
+                  </div>
+                )}
+                
+                <div className="flex justify-end">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    onClick={togglePasswordField}
+                    className="p-0"
+                  >
+                    {showPasswordField ? "Usar enlace mágico" : "Usar contraseña"}
+                  </Button>
+                </div>
+                
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando...
+                      {showPasswordField ? "Iniciando sesión..." : "Enviando..."}
                     </>
                   ) : (
-                    "Enviar enlace de acceso"
+                    showPasswordField ? "Iniciar sesión" : "Enviar enlace de acceso"
                   )}
                 </Button>
               </form>
