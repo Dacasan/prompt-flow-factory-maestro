@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +6,8 @@ import { useClients } from "@/domains/clients/hooks/useClients";
 import { useAuth } from "@/domains/auth/hooks/useAuth";
 import { Ticket } from "../types";
 
-export interface ExtendedTicket extends Ticket {
-  id: string; // Make id non-optional explicitly
+export interface ExtendedTicket extends Omit<Ticket, 'id'> {
+  id: string; // Make id required explicitly
   clients?: { 
     name: string; 
     email: string;
@@ -44,8 +43,13 @@ export function useTickets() {
       throw new Error(error.message);
     }
     
-    // Cast the data to ExtendedTicket[] to match the expected type
-    return data as ExtendedTicket[];
+    // Ensure all returned tickets have the required id field
+    const typedData = (data || []).map(ticket => ({
+      ...ticket,
+      id: ticket.id || '' // Ensure id is never undefined
+    })) as ExtendedTicket[];
+    
+    return typedData;
   };
   
   const { data: tickets = [], isLoading, error } = useQuery({

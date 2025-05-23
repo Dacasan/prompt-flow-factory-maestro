@@ -43,9 +43,9 @@ export const Tickets = () => {
     });
   };
 
-  // Transform tickets to match the TicketsTable expected format
+  // Transform tickets to match the TicketsTable expected format with proper typing
   const formattedTickets = tickets.map(ticket => ({
-    id: ticket.id || '',
+    id: ticket.id, // id is now required in ExtendedTicket
     title: ticket.title || '',
     description: ticket.description,
     status: ticket.status || 'open',

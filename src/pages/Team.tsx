@@ -23,8 +23,8 @@ export const Team = () => {
     isLoading, 
     inviteTeamMember, 
     isInviting,
-    sendMagicLink,
-    isSendingMagicLink
+    sendMagicLink = () => {}, // Provide default empty function
+    isSendingMagicLink = false // Provide default value
   } = useTeam();
   
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -33,8 +33,12 @@ export const Team = () => {
   const handleInvite = (data: InvitationData) => {
     inviteTeamMember(data, {
       onSuccess: (response: any) => {
+        // Check if response exists and contains inviteLink before setting
         if (response && response.inviteLink) {
           setInvitationLink(response.inviteLink);
+        } else {
+          // If no inviteLink is present, close the sheet after successful invitation
+          setIsSheetOpen(false);
         }
       }
     });
@@ -103,7 +107,7 @@ export const Team = () => {
         <TeamMembersTable 
           members={teamMembers} 
           onSendMagicLink={handleSendMagicLink}
-          isSendingMagicLink={isSendingMagicLink || false}
+          isSendingMagicLink={isSendingMagicLink}
         />
       )}
     </div>
