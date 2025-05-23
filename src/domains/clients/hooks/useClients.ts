@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,7 +110,7 @@ export function useClients() {
         // Find users associated with this client's email
         const { data: users, error: userError } = await supabase
           .from('profiles')
-          .select('id, email')
+          .select('id')
           .eq('email', data.email)
           .limit(1);
         
@@ -121,14 +120,8 @@ export function useClients() {
         
         if (users && users.length > 0) {
           const user = users[0];
-          const { error: updateError } = await supabase.auth.admin.updateUserById(
-            user.id,
-            { password }
-          );
-          
-          if (updateError) {
-            toast.error(`Client updated but couldn't update password: ${updateError.message}`);
-          }
+          // This will need to be handled differently as admin.updateUserById is not available in the client
+          toast.warning(`Password update requires admin privileges`);
         }
       } catch (authError: any) {
         toast.error(`Client updated but couldn't update password: ${authError.message}`);

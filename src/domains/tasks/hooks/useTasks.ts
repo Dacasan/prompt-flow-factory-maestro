@@ -68,7 +68,7 @@ export function useTasks() {
         order_id: taskData.order_id || null,
         assigned_to: taskData.assigned_to || null,
         due_date: taskData.due_date ? taskData.due_date.toISOString() : null,
-        status: 'todo'
+        status: 'to_do'
       })
       .select()
       .single();

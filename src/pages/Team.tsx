@@ -32,8 +32,8 @@ export const Team = () => {
 
   const handleInvite = (data: InvitationData) => {
     inviteTeamMember(data, {
-      onSuccess: (response) => {
-        if (response.inviteLink) {
+      onSuccess: (response: any) => {
+        if (response && response.inviteLink) {
           setInvitationLink(response.inviteLink);
         }
       }
@@ -41,7 +41,9 @@ export const Team = () => {
   };
 
   const handleSendMagicLink = (email: string) => {
-    sendMagicLink(email);
+    if (sendMagicLink) {
+      sendMagicLink(email);
+    }
   };
 
   const onSheetClose = () => {
@@ -101,7 +103,7 @@ export const Team = () => {
         <TeamMembersTable 
           members={teamMembers} 
           onSendMagicLink={handleSendMagicLink}
-          isSendingMagicLink={isSendingMagicLink}
+          isSendingMagicLink={isSendingMagicLink || false}
         />
       )}
     </div>

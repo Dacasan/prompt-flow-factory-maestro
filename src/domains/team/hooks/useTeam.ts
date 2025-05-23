@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { TeamMember, InvitationResponse } from "@/domains/team/types";
 
 export function useTeam() {
   const queryClient = useQueryClient();
@@ -16,7 +17,7 @@ export function useTeam() {
       throw new Error(error.message);
     }
     
-    return data;
+    return data as TeamMember[];
   };
   
   const { data: teamMembers = [], isLoading, error } = useQuery({
@@ -69,7 +70,7 @@ export function useTeam() {
     return {
       ...data,
       inviteLink
-    };
+    } as InvitationResponse;
   };
   
   const inviteTeamMemberMutation = useMutation({

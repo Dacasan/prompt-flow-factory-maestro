@@ -7,7 +7,7 @@ import { useClients } from "@/domains/clients/hooks/useClients";
 import { useAuth } from "@/domains/auth/hooks/useAuth";
 import { Ticket } from "../types";
 
-export interface ExtendedTicket extends Omit<Ticket, 'id'> {
+export interface ExtendedTicket extends Ticket {
   id: string; // Make id non-optional explicitly
   clients?: { 
     name: string; 
@@ -45,7 +45,7 @@ export function useTickets() {
     }
     
     // Cast the data to ExtendedTicket[] to match the expected type
-    return data as unknown as ExtendedTicket[];
+    return data as ExtendedTicket[];
   };
   
   const { data: tickets = [], isLoading, error } = useQuery({
