@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
@@ -14,7 +14,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRole 
 }) => {
   const { user, isLoading } = useAuth();
-
+  const location = useLocation();
+  
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -27,6 +28,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" replace />;
   }
 
+  // Special handling for client users at root path
+  if (user.role === "client" && location.pathname === "/" && !requiredRole) {
+    return <Navigate to="/client" replace />;
+  }
+
   // Si se requiere un rol específico y el usuario no lo tiene, redirigir
   if (requiredRole && user.role !== requiredRole) {
     const isAdminAccessing = user.role === "admin" && 
@@ -34,6 +40,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     
     // Los administradores pueden acceder a cualquier ruta
     if (!isAdminAccessing) {
+      if (user.role === "client") {
+        return <Navigate to="/client" replace />;
+      }
       return <Navigate to="/" replace />;
     }
   }

@@ -65,9 +65,10 @@ export function useTickets() {
           return undefined;
         }
         
+        const profiles = ticket.profiles as any;
         return {
-          full_name: (ticket.profiles as any).full_name || '',
-          avatar_url: (ticket.profiles as any).avatar_url
+          full_name: profiles.full_name || '',
+          avatar_url: profiles.avatar_url
         };
       };
       
@@ -81,9 +82,10 @@ export function useTickets() {
           return undefined;
         }
         
+        const assigned = ticket.assigned as any;
         return {
-          full_name: (ticket.assigned as any).full_name || '',
-          avatar_url: (ticket.assigned as any).avatar_url
+          full_name: assigned.full_name || '',
+          avatar_url: assigned.avatar_url
         };
       };
       
@@ -97,9 +99,10 @@ export function useTickets() {
           return undefined;
         }
         
+        const clients = ticket.clients as any;
         return {
-          name: (ticket.clients as any).name || '',
-          email: (ticket.clients as any).email || ''
+          name: clients.name || '',
+          email: clients.email || ''
         };
       };
       

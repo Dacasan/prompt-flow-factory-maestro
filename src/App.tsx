@@ -16,6 +16,7 @@ import { Services } from "./pages/Services";
 import { Orders } from "./pages/Orders";
 import { Tasks } from "./pages/Tasks";
 import { Tickets } from "./pages/Tickets";
+import { ClientDashboard } from "./pages/ClientDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,15 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Client routes */}
+            <Route path="/client" element={
+              <ProtectedRoute requiredRole="client">
+                <AppLayout>
+                  <ClientDashboard />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
             
             {/* Protected routes */}
             <Route path="/" element={
