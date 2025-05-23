@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,8 +7,16 @@ import { useClients } from "@/domains/clients/hooks/useClients";
 import { useAuth } from "@/domains/auth/hooks/useAuth";
 import { Ticket } from "../types";
 
-export interface ExtendedTicket extends Omit<Ticket, 'id'> {
-  id: string; // Make id required explicitly
+export interface ExtendedTicket {
+  id: string; // Making id required explicitly
+  title: string;
+  description?: string | null;
+  status: string;
+  client_id: string;
+  created_by?: string | null;
+  assigned_to?: string | null;
+  created_at: string;
+  updated_at: string;
   clients?: { 
     name: string; 
     email: string;
@@ -43,11 +52,23 @@ export function useTickets() {
       throw new Error(error.message);
     }
     
-    // Ensure all returned tickets have the required id field
-    const typedData = (data || []).map(ticket => ({
-      ...ticket,
-      id: ticket.id || '' // Ensure id is never undefined
-    })) as ExtendedTicket[];
+    // Ensure all returned tickets have the required id field and handle possible null values
+    const typedData = (data || []).map(ticket => {
+      return {
+        id: ticket.id,
+        title: ticket.title || '',
+        description: ticket.description,
+        status: ticket.status || 'open',
+        client_id: ticket.client_id,
+        created_by: ticket.created_by,
+        assigned_to: ticket.assigned_to,
+        created_at: ticket.created_at || '',
+        updated_at: ticket.updated_at || '',
+        clients: ticket.clients,
+        profiles: ticket.profiles && typeof ticket.profiles !== 'string' ? ticket.profiles : undefined,
+        assigned: ticket.assigned && typeof ticket.assigned !== 'string' ? ticket.assigned : undefined
+      } as ExtendedTicket;
+    });
     
     return typedData;
   };

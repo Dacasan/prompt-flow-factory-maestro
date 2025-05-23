@@ -43,16 +43,17 @@ export const Tickets = () => {
     });
   };
 
-  // Transform tickets to match the TicketsTable expected format with proper typing
+  // The tickets are already properly typed from useTickets
+  // Just ensure we're passing the right properties to TicketsTable
   const formattedTickets = tickets.map(ticket => ({
-    id: ticket.id, // id is now required in ExtendedTicket
+    id: ticket.id,
     title: ticket.title || '',
     description: ticket.description,
     status: ticket.status || 'open',
     client_id: ticket.client_id || '',
     created_by: ticket.created_by,
     assigned_to: ticket.assigned_to,
-    created_at: ticket.created_at || '',
+    created_at: ticket.created_at,
     clients: ticket.clients,
     profiles: ticket.profiles,
     assigned: ticket.assigned
