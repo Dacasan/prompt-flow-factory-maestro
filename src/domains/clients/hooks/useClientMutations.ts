@@ -69,7 +69,8 @@ export function useClientMutations() {
             throw new Error(error.message);
           }
           
-          const profileData = data as ProfileData[] | null;
+          // Explicitly type the data to avoid deep type inference
+          const profileData: ProfileData[] | null = data as ProfileData[] | null;
           
           if (profileData && profileData.length > 0) {
             // This will need to be handled differently as admin.updateUserById is not available in the client
