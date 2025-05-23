@@ -54,17 +54,56 @@ export function useTickets() {
     
     // Ensure all returned tickets have the required id field and handle possible null values
     const typedData = (data || []).map(ticket => {
+      // Helper function to safely access properties
+      const safeProfilesData = () => {
+        if (!ticket.profiles || typeof ticket.profiles !== 'object') {
+          return undefined;
+        }
+        
+        // Check if it's an error object (Supabase returns specific error objects for failed joins)
+        if ('error' in ticket.profiles) {
+          return undefined;
+        }
+        
+        return {
+          full_name: (ticket.profiles as any).full_name || '',
+          avatar_url: (ticket.profiles as any).avatar_url
+        };
+      };
+      
+      const safeAssignedData = () => {
+        if (!ticket.assigned || typeof ticket.assigned !== 'object') {
+          return undefined;
+        }
+        
+        // Check if it's an error object
+        if ('error' in ticket.assigned) {
+          return undefined;
+        }
+        
+        return {
+          full_name: (ticket.assigned as any).full_name || '',
+          avatar_url: (ticket.assigned as any).avatar_url
+        };
+      };
+      
+      const safeClientsData = () => {
+        if (!ticket.clients || typeof ticket.clients !== 'object') {
+          return undefined;
+        }
+        
+        // Check if it's an error object
+        if ('error' in ticket.clients) {
+          return undefined;
+        }
+        
+        return {
+          name: (ticket.clients as any).name || '',
+          email: (ticket.clients as any).email || ''
+        };
+      };
+      
       // Explicitly construct the ticket object with all required fields
-      const profiles = ticket.profiles ? {
-        full_name: ticket.profiles.full_name || '',
-        avatar_url: ticket.profiles.avatar_url
-      } : undefined;
-      
-      const assigned = ticket.assigned ? {
-        full_name: ticket.assigned.full_name || '',
-        avatar_url: ticket.assigned.avatar_url
-      } : undefined;
-      
       return {
         id: ticket.id,
         title: ticket.title || '',
@@ -75,11 +114,9 @@ export function useTickets() {
         assigned_to: ticket.assigned_to,
         created_at: ticket.created_at || '',
         updated_at: ticket.updated_at || '',
-        clients: ticket.clients && typeof ticket.clients === 'object' ? 
-          { name: ticket.clients.name || '', email: ticket.clients.email || '' } : 
-          undefined,
-        profiles: profiles,
-        assigned: assigned
+        clients: safeClientsData(),
+        profiles: safeProfilesData(),
+        assigned: safeAssignedData()
       } as ExtendedTicket;
     });
     

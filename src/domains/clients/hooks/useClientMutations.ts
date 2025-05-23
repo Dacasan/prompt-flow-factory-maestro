@@ -64,10 +64,10 @@ export function useClientMutations() {
             throw new Error(error.message);
           }
           
-          // Use a concrete type with minimal structure to avoid deep type inference
-          const profileData: { id: string }[] = data || [];
+          // Use a simple type definition to avoid deep type inference
+          const profileData: { id: string }[] = data ?? [];
           
-          if (profileData && profileData.length > 0) {
+          if (profileData.length > 0) {
             // This will need to be handled differently as admin.updateUserById is not available in the client
             toast.warning(`Password update requires admin privileges`);
           }
