@@ -11,11 +11,6 @@ import {
 } from "../services/clientsService";
 import type { ClientFormData } from "../types";
 
-// Define a simple interface for the profile query result
-interface ProfileData {
-  id: string;
-}
-
 export function useClientMutations() {
   const queryClient = useQueryClient();
 
@@ -69,8 +64,8 @@ export function useClientMutations() {
             throw new Error(error.message);
           }
           
-          // Using a simpler approach to avoid deep type inference
-          const profileData = data as any[];
+          // Avoid deep type inference by using a simple type
+          const profileData = data as { id: string }[];
           
           if (profileData && profileData.length > 0) {
             // This will need to be handled differently as admin.updateUserById is not available in the client
