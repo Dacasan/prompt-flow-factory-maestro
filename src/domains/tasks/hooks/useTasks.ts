@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,15 +11,15 @@ export type ExtendedTask = Task & {
     id: string;
     full_name: string;
     avatar_url?: string | null;
-  };
+  } | null;
   order?: {
     id: string;
     client_id: string;
     clients?: { 
       id: string;
       name: string;
-    }
-  };
+    } | null;
+  } | null;
 };
 
 export function useTasks() {
@@ -32,7 +33,6 @@ export function useTasks() {
       .from('tasks')
       .select(`
         *,
-        profiles:assigned_to (id, full_name, avatar_url),
         orders:order_id (
           id, 
           client_id,
@@ -48,11 +48,24 @@ export function useTasks() {
     
     console.log("Raw tasks data:", data);
     
-    // Map database task status to UI status
-    return (data || []).map(task => ({
-      ...task,
-      status: mapDbStatusToUiStatus(task.status)
-    })) as ExtendedTask[];
+    // Process the tasks to include assignee information from team manually
+    // since we can't directly join on assigned_to
+    const processedTasks = (data || []).map(task => {
+      // Find the team member assigned to this task
+      const assignee = team?.find(member => member.id === task.assigned_to);
+      
+      return {
+        ...task,
+        status: mapDbStatusToUiStatus(task.status),
+        assignee: assignee ? {
+          id: assignee.id,
+          full_name: assignee.full_name,
+          avatar_url: assignee.avatar_url
+        } : null
+      };
+    });
+    
+    return processedTasks as ExtendedTask[];
   };
   
   // Helper function to map database status to UI status
@@ -80,13 +93,16 @@ export function useTasks() {
     queryFn: getTasks
   });
   
-  const createTask = async (taskData: {
+  // Define a concrete type for task creation to avoid excessive type instantiation
+  interface TaskCreateData {
     title: string;
     description?: string;
     order_id?: string;
     assigned_to?: string;
     due_date?: Date;
-  }) => {
+  }
+  
+  const createTask = async (taskData: TaskCreateData) => {
     const { data, error } = await supabase
       .from('tasks')
       .insert({
@@ -122,7 +138,13 @@ export function useTasks() {
     }
   });
   
-  const updateTaskStatus = async ({ id, status }: { id: string; status: string }) => {
+  // Define a concrete type for task status update to avoid excessive type instantiation
+  interface TaskStatusUpdateData {
+    id: string;
+    status: string;
+  }
+  
+  const updateTaskStatus = async ({ id, status }: TaskStatusUpdateData) => {
     console.log(`Updating task ${id} status to ${status}`);
     // Convert UI status to database status before saving
     const dbStatus = mapUiStatusToDbStatus(status);

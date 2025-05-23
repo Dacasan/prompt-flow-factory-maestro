@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,14 +76,7 @@ export function useClientMutations() {
             throw new Error(error.message);
           }
           
-          // Define a simple interface to avoid deep type inference
-          interface ProfileData {
-            id: string;
-          }
-          
-          const profileData = (data || []) as ProfileData[];
-          
-          if (profileData.length > 0) {
+          if (data && data.length > 0) {
             // This will need to be handled differently as admin.updateUserById is not available in the client
             toast.warning(`Password update requires admin privileges`);
           }

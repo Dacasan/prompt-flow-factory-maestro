@@ -4,7 +4,7 @@ import { useTasks } from "@/domains/tasks/hooks/useTasks";
 import { TasksKanban } from "@/components/tasks/TasksKanban";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { Button } from "@/components/ui/button";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Loader2, PlusCircle, AlertTriangle } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -13,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const Tasks = () => {
   const { 
@@ -20,6 +21,7 @@ export const Tasks = () => {
     orders,
     team,
     isLoading,
+    error,
     createTask,
     updateTaskStatus,
     isCreating,
@@ -31,6 +33,7 @@ export const Tasks = () => {
   console.log("Tasks page:", { 
     tasksCount: tasks?.length || 0,
     isLoading,
+    error: error ? 'Error fetching tasks' : null,
     orders: orders?.length || 0,
     team: team?.length || 0
   });
@@ -95,6 +98,27 @@ export const Tasks = () => {
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : error ? (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            There was an error loading tasks. Please try again later.
+            <details className="mt-2 text-xs">
+              <summary>Error details</summary>
+              <p>{error instanceof Error ? error.message : 'Unknown error'}</p>
+            </details>
+          </AlertDescription>
+        </Alert>
+      ) : tasks.length === 0 ? (
+        <div className="text-center py-20 border rounded-lg border-dashed">
+          <h3 className="text-lg font-medium mb-2">No tasks yet</h3>
+          <p className="text-muted-foreground mb-6">Create your first task to get started</p>
+          <Button onClick={() => setIsSheetOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create Task
+          </Button>
         </div>
       ) : (
         <TasksKanban
