@@ -11,6 +11,11 @@ import {
 } from "../services/clientsService";
 import type { ClientFormData } from "../types";
 
+// Define a simple interface for the profile query result
+interface ProfileData {
+  id: string;
+}
+
 export function useClientMutations() {
   const queryClient = useQueryClient();
 
@@ -54,15 +59,17 @@ export function useClientMutations() {
       if (password) {
         try {
           // Find users associated with this client's email
-          const { data: profileData, error: profileError } = await supabase
+          const { data, error } = await supabase
             .from('profiles')
             .select('id')
             .eq('email', data.email)
-            .limit(1) as { data: Array<{ id: string }> | null, error: Error | null };
+            .limit(1);
           
-          if (profileError) {
-            throw new Error(profileError.message);
+          if (error) {
+            throw new Error(error.message);
           }
+          
+          const profileData = data as ProfileData[] | null;
           
           if (profileData && profileData.length > 0) {
             // This will need to be handled differently as admin.updateUserById is not available in the client
