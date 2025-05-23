@@ -11,9 +11,10 @@ import {
 } from "../services/clientsService";
 import type { ClientFormData } from "../types";
 
-// Define a type for profile data to avoid excessive type recursion
-type ProfileData = {
-  id: string;
+// Define explicit types for Supabase query responses to avoid excessive type recursion
+type ProfileQueryResponse = {
+  data: Array<{ id: string }> | null;
+  error: Error | null;
 };
 
 export function useClientMutations() {
@@ -59,17 +60,17 @@ export function useClientMutations() {
       if (password) {
         try {
           // Find users associated with this client's email
-          const { data: profileData, error: userError } = await supabase
+          const response: ProfileQueryResponse = await supabase
             .from('profiles')
             .select('id')
             .eq('email', data.email)
-            .limit(1) as { data: ProfileData[] | null, error: Error | null };
+            .limit(1);
           
-          if (userError) {
-            throw new Error(userError.message);
+          if (response.error) {
+            throw new Error(response.error.message);
           }
           
-          if (profileData && profileData.length > 0) {
+          if (response.data && response.data.length > 0) {
             // This will need to be handled differently as admin.updateUserById is not available in the client
             toast.warning(`Password update requires admin privileges`);
           }
