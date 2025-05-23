@@ -54,7 +54,7 @@ export function useClientMutations() {
       if (password) {
         try {
           // Find users associated with this client's email
-          const { data: users, error: userError } = await supabase
+          const { data: profileData, error: userError } = await supabase
             .from('profiles')
             .select('id')
             .eq('email', data.email)
@@ -64,7 +64,7 @@ export function useClientMutations() {
             throw new Error(userError.message);
           }
           
-          if (users && users.length > 0) {
+          if (profileData && profileData.length > 0) {
             // This will need to be handled differently as admin.updateUserById is not available in the client
             toast.warning(`Password update requires admin privileges`);
           }
