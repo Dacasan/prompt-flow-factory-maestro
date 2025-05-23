@@ -116,7 +116,7 @@ export const TicketForm: React.FC<TicketFormProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {team.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.full_name}

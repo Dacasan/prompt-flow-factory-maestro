@@ -60,11 +60,14 @@ export function useClientMutations() {
       if (password) {
         try {
           // Find users associated with this client's email
-          const { data: profileData, error: profileError }: ProfileQueryResponse = await supabase
+          const result = await supabase
             .from('profiles')
             .select('id')
             .eq('email', data.email)
             .limit(1);
+          
+          const profileData = result.data;
+          const profileError = result.error;
           
           if (profileError) {
             throw new Error(profileError.message);
