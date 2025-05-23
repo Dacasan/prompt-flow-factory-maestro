@@ -56,69 +56,74 @@ export function useTickets() {
     const typedData = (data || []).map(ticket => {
       // Helper function to safely access properties
       const safeProfilesData = () => {
-        // Check if profiles is null or undefined first
-        if (!ticket.profiles) {
+        // Check if profiles is null or undefined
+        if (ticket.profiles == null) {
           return undefined;
         }
         
+        // Check object type
         if (typeof ticket.profiles !== 'object') {
           return undefined;
         }
         
         // Check if it's an error object (Supabase returns specific error objects for failed joins)
-        if ('error' in ticket.profiles) {
+        if (ticket.profiles && 'error' in ticket.profiles) {
           return undefined;
         }
         
-        // Cast to any to safely access properties
-        const profiles = ticket.profiles as any;
+        // Safe access with type assertion
+        const profiles = ticket.profiles as Record<string, unknown>;
         return {
-          full_name: profiles?.full_name || '',
-          avatar_url: profiles?.avatar_url
+          full_name: (profiles.full_name as string) || '',
+          avatar_url: profiles.avatar_url as string | undefined
         };
       };
       
       const safeAssignedData = () => {
-        // Check if assigned is null or undefined first
-        if (!ticket.assigned) {
+        // Check if assigned is null or undefined
+        if (ticket.assigned == null) {
           return undefined;
         }
         
+        // Check object type
         if (typeof ticket.assigned !== 'object') {
           return undefined;
         }
         
         // Check if it's an error object
-        if ('error' in ticket.assigned) {
+        if (ticket.assigned && 'error' in ticket.assigned) {
           return undefined;
         }
         
-        // Cast to any to safely access properties
-        const assigned = ticket.assigned as any;
+        // Safe access with type assertion
+        const assigned = ticket.assigned as Record<string, unknown>;
         return {
-          full_name: assigned?.full_name || '',
-          avatar_url: assigned?.avatar_url
+          full_name: (assigned.full_name as string) || '',
+          avatar_url: assigned.avatar_url as string | undefined
         };
       };
       
       const safeClientsData = () => {
-        if (!ticket.clients) {
+        // Check if clients is null or undefined
+        if (ticket.clients == null) {
           return undefined;
         }
         
+        // Check object type
         if (typeof ticket.clients !== 'object') {
           return undefined;
         }
         
         // Check if it's an error object
-        if ('error' in ticket.clients) {
+        if (ticket.clients && 'error' in ticket.clients) {
           return undefined;
         }
         
-        const clients = ticket.clients as any;
+        // Safe access with type assertion
+        const clients = ticket.clients as Record<string, unknown>;
         return {
-          name: clients?.name || '',
-          email: clients?.email || ''
+          name: (clients.name as string) || '',
+          email: (clients.email as string) || ''
         };
       };
       

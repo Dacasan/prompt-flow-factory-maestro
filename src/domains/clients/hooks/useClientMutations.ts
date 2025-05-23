@@ -45,9 +45,15 @@ export function useClientMutations() {
     }
   });
 
-  // Fix for type instantiation issue - explicitly define the type
-  interface ClientUpdateData extends ClientFormData { 
+  // Define a concrete type to avoid excessive type instantiation depth
+  interface ClientUpdateData { 
     id: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+    address?: string | null;
+    logo_url?: string | null;
+    password?: string;
   }
   
   const updateClientMutation = useMutation({
