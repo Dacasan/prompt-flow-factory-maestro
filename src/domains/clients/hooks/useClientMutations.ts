@@ -52,8 +52,8 @@ export function useClientMutations() {
 
   const updateClientMutation = useMutation({
     mutationFn: async (clientData: ClientFormData & { id: string }) => {
-      const { id, password, ...data } = clientData;
-      const updatedClient = await updateClient(id, data);
+      const { id, password, ...clientFields } = clientData;
+      const updatedClient = await updateClient(id, clientFields);
       
       // Update user password if provided
       if (password) {
@@ -62,7 +62,7 @@ export function useClientMutations() {
           const { data, error } = await supabase
             .from('profiles')
             .select('id')
-            .eq('email', data.email)
+            .eq('email', clientFields.email)
             .limit(1);
           
           if (error) {
