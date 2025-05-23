@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useTickets } from "@/domains/tickets/hooks/useTickets";
+import { useTickets, ExtendedTicket } from "@/domains/tickets/hooks/useTickets";
 import { TicketForm } from "@/components/tickets/TicketForm";
 import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,21 @@ export const Tickets = () => {
     });
   };
 
+  // Transform tickets to match the TicketsTable expected format
+  const formattedTickets = tickets.map(ticket => ({
+    id: ticket.id,
+    title: ticket.title,
+    description: ticket.description,
+    status: ticket.status,
+    client_id: ticket.client_id,
+    created_by: ticket.created_by,
+    assigned_to: ticket.assigned_to,
+    created_at: ticket.created_at,
+    clients: ticket.clients,
+    profiles: ticket.profiles,
+    assigned: ticket.assigned
+  }));
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -79,7 +94,7 @@ export const Tickets = () => {
         </div>
       ) : (
         <TicketsTable
-          tickets={tickets}
+          tickets={formattedTickets}
           team={team || []}
           onUpdateStatus={handleUpdateStatus}
           isUpdating={isUpdating}

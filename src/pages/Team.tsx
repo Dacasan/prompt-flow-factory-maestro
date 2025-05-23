@@ -33,7 +33,9 @@ export const Team = () => {
   const handleInvite = (data: InvitationData) => {
     inviteTeamMember(data, {
       onSuccess: (response) => {
-        setInvitationLink(response.inviteLink);
+        if (response.inviteLink) {
+          setInvitationLink(response.inviteLink);
+        }
       }
     });
   };
@@ -51,7 +53,7 @@ export const Team = () => {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Team Members</h1>
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <Sheet open={isSheetOpen} onOpenChange={onSheetClose}>
           <SheetTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />

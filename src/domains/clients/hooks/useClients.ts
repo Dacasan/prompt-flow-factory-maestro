@@ -109,19 +109,18 @@ export function useClients() {
     if (password) {
       try {
         // Find users associated with this client's email
-        const { data: users, error: userError } = await supabase.auth.admin.listUsers({
-          page: 1,
-          perPage: 100
-        });
+        const { data: users, error: userError } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('email', data.email)
+          .limit(1);
         
         if (userError) {
           throw new Error(userError.message);
         }
         
-        // Find the user with the matching email
-        const user = users.users.find(u => u.email === data.email);
-        
-        if (user) {
+        if (users && users.length > 0) {
+          const user = users[0];
           const { error: updateError } = await supabase.auth.admin.updateUserById(
             user.id,
             { password }

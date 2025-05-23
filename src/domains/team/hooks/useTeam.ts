@@ -24,7 +24,8 @@ export function useTeam() {
     queryFn: getTeamMembers,
   });
   
-  const inviteTeamMember = async ({ email, role }: { email: string; role: string }) => {
+  const inviteTeamMember = async ({ email, role, full_name, password }: { email: string; role: string; full_name?: string; password?: string }) => {
+    // First create the invitation
     const { data, error } = await supabase
       .from('invitations')
       .insert({
@@ -40,9 +41,35 @@ export function useTeam() {
       throw new Error(error.message);
     }
     
-    // In a real app, would send an invitation email here
+    // If password is provided, create a user account directly
+    if (password) {
+      try {
+        const { error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: full_name || email,
+              role: role
+            }
+          }
+        });
+        
+        if (authError) {
+          throw new Error(authError.message);
+        }
+      } catch (signupError: any) {
+        throw new Error(`Invitation created but couldn't create user: ${signupError.message}`);
+      }
+    }
     
-    return data;
+    // Create a mock invite link for demo purposes
+    const inviteLink = `${window.location.origin}/auth?invitation=${data.token}`;
+    
+    return {
+      ...data,
+      inviteLink
+    };
   };
   
   const inviteTeamMemberMutation = useMutation({
@@ -101,6 +128,30 @@ export function useTeam() {
     }
   });
   
+  // Send magic link to team member
+  const sendMagicLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin
+      }
+    });
+
+    if (error) throw error;
+    
+    return { success: true, message: "Magic link sent successfully" };
+  };
+
+  const sendMagicLinkMutation = useMutation({
+    mutationFn: sendMagicLink,
+    onSuccess: () => {
+      toast.success(`Magic link sent successfully!`);
+    },
+    onError: (error: any) => {
+      toast.error(`Error sending magic link: ${error.message}`);
+    }
+  });
+  
   // Add a team property that returns the team members for compatibility
   const team = teamMembers;
   
@@ -112,8 +163,10 @@ export function useTeam() {
     inviteTeamMember: inviteTeamMemberMutation.mutate,
     updateTeamMember: updateTeamMemberMutation.mutate,
     removeTeamMember: removeTeamMemberMutation.mutate,
+    sendMagicLink: sendMagicLinkMutation.mutate,
     isInviting: inviteTeamMemberMutation.isPending,
     isUpdating: updateTeamMemberMutation.isPending,
     isRemoving: removeTeamMemberMutation.isPending,
+    isSendingMagicLink: sendMagicLinkMutation.isPending
   };
 }

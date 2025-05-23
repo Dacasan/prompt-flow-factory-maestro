@@ -7,7 +7,8 @@ import { useClients } from "@/domains/clients/hooks/useClients";
 import { useAuth } from "@/domains/auth/hooks/useAuth";
 import { Ticket } from "../types";
 
-export interface ExtendedTicket extends Ticket {
+export interface ExtendedTicket extends Omit<Ticket, 'id'> {
+  id: string; // Make id non-optional explicitly
   clients?: { 
     name: string; 
     email: string;
