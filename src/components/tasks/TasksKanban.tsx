@@ -40,6 +40,13 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
     })
   );
 
+  console.log("Tasks in Kanban:", tasks);
+  console.log("Tasks by status:", {
+    todo: tasks.filter(task => task.status === "todo").length,
+    doing: tasks.filter(task => task.status === "doing").length,
+    done: tasks.filter(task => task.status === "done").length
+  });
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -67,7 +74,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
         {/* Todo Column */}
         <Card className="bg-background">
           <CardHeader className="bg-muted/50 rounded-t-md">
-            <CardTitle className="text-lg">To Do</CardTitle>
+            <CardTitle className="text-lg">To Do ({todoTasks.length})</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <SortableContext
@@ -76,7 +83,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
               strategy={verticalListSortingStrategy}
             >
               <div id="todo" className="space-y-4 min-h-[200px]">
-                {todoTasks.map(task => (
+                {todoTasks.length > 0 ? todoTasks.map(task => (
                   <TaskCard 
                     key={task.id}
                     task={{
@@ -98,8 +105,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
                     }}
                     disabled={isUpdating}
                   />
-                ))}
-                {todoTasks.length === 0 && (
+                )) : (
                   <p className="text-muted-foreground text-center py-4">No tasks</p>
                 )}
               </div>
@@ -110,7 +116,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
         {/* Doing Column */}
         <Card className="bg-background">
           <CardHeader className="bg-muted/50 rounded-t-md">
-            <CardTitle className="text-lg">Doing</CardTitle>
+            <CardTitle className="text-lg">Doing ({doingTasks.length})</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <SortableContext
@@ -119,7 +125,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
               strategy={verticalListSortingStrategy}
             >
               <div id="doing" className="space-y-4 min-h-[200px]">
-                {doingTasks.map(task => (
+                {doingTasks.length > 0 ? doingTasks.map(task => (
                   <TaskCard 
                     key={task.id}
                     task={{
@@ -141,8 +147,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
                     }}
                     disabled={isUpdating}
                   />
-                ))}
-                {doingTasks.length === 0 && (
+                )) : (
                   <p className="text-muted-foreground text-center py-4">No tasks</p>
                 )}
               </div>
@@ -153,7 +158,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
         {/* Done Column */}
         <Card className="bg-background">
           <CardHeader className="bg-muted/50 rounded-t-md">
-            <CardTitle className="text-lg">Done</CardTitle>
+            <CardTitle className="text-lg">Done ({doneTasks.length})</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <SortableContext
@@ -162,7 +167,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
               strategy={verticalListSortingStrategy}
             >
               <div id="done" className="space-y-4 min-h-[200px]">
-                {doneTasks.map(task => (
+                {doneTasks.length > 0 ? doneTasks.map(task => (
                   <TaskCard 
                     key={task.id}
                     task={{
@@ -184,8 +189,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
                     }}
                     disabled={isUpdating}
                   />
-                ))}
-                {doneTasks.length === 0 && (
+                )) : (
                   <p className="text-muted-foreground text-center py-4">No tasks</p>
                 )}
               </div>

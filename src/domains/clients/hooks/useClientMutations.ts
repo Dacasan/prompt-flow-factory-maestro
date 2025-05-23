@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +56,7 @@ export function useClientMutations() {
   }
   
   const updateClientMutation = useMutation({
+    // Use the concrete type instead of extending from ClientFormData
     mutationFn: async (clientData: ClientUpdateData) => {
       const { id, password, ...clientFields } = clientData;
       const updatedClient = await updateClient(id, clientFields);

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useTasks } from "@/domains/tasks/hooks/useTasks";
 import { TasksKanban } from "@/components/tasks/TasksKanban";
@@ -27,6 +28,13 @@ export const Tasks = () => {
   
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  console.log("Tasks page:", { 
+    tasksCount: tasks?.length || 0,
+    isLoading,
+    orders: orders?.length || 0,
+    team: team?.length || 0
+  });
+
   const handleCreateSubmit = (data: any) => {
     createTask(data, {
       onSuccess: () => {
@@ -36,6 +44,7 @@ export const Tasks = () => {
   };
 
   const handleDragEnd = (taskId: string, newStatus: string) => {
+    console.log(`Dragging task ${taskId} to ${newStatus}`);
     updateTaskStatus({
       id: taskId,
       status: newStatus,

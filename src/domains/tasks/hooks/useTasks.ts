@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +27,7 @@ export function useTasks() {
   const { team } = useTeam();
   
   const getTasks = async () => {
+    console.log("Fetching tasks...");
     const { data, error } = await supabase
       .from('tasks')
       .select(`
@@ -42,8 +42,11 @@ export function useTasks() {
       .order('created_at', { ascending: false });
     
     if (error) {
+      console.error("Error fetching tasks:", error);
       throw new Error(error.message);
     }
+    
+    console.log("Raw tasks data:", data);
     
     // Map database task status to UI status
     return (data || []).map(task => ({
@@ -74,7 +77,7 @@ export function useTasks() {
   
   const { data: tasks = [], isLoading, error } = useQuery({
     queryKey: ['tasks'],
-    queryFn: getTasks,
+    queryFn: getTasks
   });
   
   const createTask = async (taskData: {
@@ -120,6 +123,7 @@ export function useTasks() {
   });
   
   const updateTaskStatus = async ({ id, status }: { id: string; status: string }) => {
+    console.log(`Updating task ${id} status to ${status}`);
     // Convert UI status to database status before saving
     const dbStatus = mapUiStatusToDbStatus(status);
     
@@ -131,6 +135,7 @@ export function useTasks() {
       .single();
     
     if (error) {
+      console.error("Error updating task status:", error);
       throw new Error(error.message);
     }
     
@@ -174,6 +179,13 @@ export function useTasks() {
     }
   });
   
+  console.log("Current tasks state:", { 
+    tasks, 
+    isLoading, 
+    error,
+    tasksCount: tasks.length
+  });
+
   return {
     tasks,
     orders,
