@@ -11,6 +11,11 @@ import {
 } from "../services/clientsService";
 import type { ClientFormData } from "../types";
 
+// Define a type for profile data to avoid excessive type recursion
+type ProfileData = {
+  id: string;
+};
+
 export function useClientMutations() {
   const queryClient = useQueryClient();
 
@@ -58,7 +63,7 @@ export function useClientMutations() {
             .from('profiles')
             .select('id')
             .eq('email', data.email)
-            .limit(1);
+            .limit(1) as { data: ProfileData[] | null, error: Error | null };
           
           if (userError) {
             throw new Error(userError.message);
