@@ -55,6 +55,16 @@ export function useTickets() {
     // Ensure all returned tickets have the required id field and handle possible null values
     const typedData = (data || []).map(ticket => {
       // Explicitly construct the ticket object with all required fields
+      const profiles = ticket.profiles ? {
+        full_name: ticket.profiles.full_name || '',
+        avatar_url: ticket.profiles.avatar_url
+      } : undefined;
+      
+      const assigned = ticket.assigned ? {
+        full_name: ticket.assigned.full_name || '',
+        avatar_url: ticket.assigned.avatar_url
+      } : undefined;
+      
       return {
         id: ticket.id,
         title: ticket.title || '',
@@ -68,12 +78,8 @@ export function useTickets() {
         clients: ticket.clients && typeof ticket.clients === 'object' ? 
           { name: ticket.clients.name || '', email: ticket.clients.email || '' } : 
           undefined,
-        profiles: ticket.profiles && typeof ticket.profiles === 'object' ? 
-          { full_name: ticket.profiles.full_name || '', avatar_url: ticket.profiles.avatar_url } : 
-          undefined,
-        assigned: ticket.assigned && typeof ticket.assigned === 'object' ? 
-          { full_name: ticket.assigned.full_name || '', avatar_url: ticket.assigned.avatar_url } : 
-          undefined
+        profiles: profiles,
+        assigned: assigned
       } as ExtendedTicket;
     });
     
