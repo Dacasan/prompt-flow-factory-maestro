@@ -45,7 +45,31 @@ export function useTasks() {
       throw new Error(error.message);
     }
     
-    return data as ExtendedTask[];
+    // Map database task status to UI status
+    return (data || []).map(task => ({
+      ...task,
+      status: mapDbStatusToUiStatus(task.status)
+    })) as ExtendedTask[];
+  };
+  
+  // Helper function to map database status to UI status
+  const mapDbStatusToUiStatus = (dbStatus: string | null): string => {
+    switch(dbStatus) {
+      case 'to_do': return 'todo';
+      case 'in_progress': return 'doing';
+      case 'done': return 'done';
+      default: return 'todo';
+    }
+  };
+  
+  // Helper function to map UI status to database status
+  const mapUiStatusToDbStatus = (uiStatus: string): string => {
+    switch(uiStatus) {
+      case 'todo': return 'to_do';
+      case 'doing': return 'in_progress';
+      case 'done': return 'done';
+      default: return 'to_do';
+    }
   };
   
   const { data: tasks = [], isLoading, error } = useQuery({
@@ -68,7 +92,7 @@ export function useTasks() {
         order_id: taskData.order_id || null,
         assigned_to: taskData.assigned_to || null,
         due_date: taskData.due_date ? taskData.due_date.toISOString() : null,
-        status: 'to_do'
+        status: 'to_do' // Always set initial status to to_do in database format
       })
       .select()
       .single();
@@ -77,7 +101,11 @@ export function useTasks() {
       throw new Error(error.message);
     }
     
-    return data as Task;
+    // Map the newly created task to include UI status
+    return {
+      ...data,
+      status: mapDbStatusToUiStatus(data.status)
+    } as Task;
   };
   
   const createTaskMutation = useMutation({
@@ -92,9 +120,12 @@ export function useTasks() {
   });
   
   const updateTaskStatus = async ({ id, status }: { id: string; status: string }) => {
+    // Convert UI status to database status before saving
+    const dbStatus = mapUiStatusToDbStatus(status);
+    
     const { data, error } = await supabase
       .from('tasks')
-      .update({ status })
+      .update({ status: dbStatus })
       .eq('id', id)
       .select()
       .single();
@@ -103,7 +134,11 @@ export function useTasks() {
       throw new Error(error.message);
     }
     
-    return data as Task;
+    // Map the updated task to include UI status
+    return {
+      ...data,
+      status: mapDbStatusToUiStatus(data.status)
+    } as Task;
   };
   
   const updateTaskStatusMutation = useMutation({

@@ -64,8 +64,8 @@ export function useClientMutations() {
             throw new Error(error.message);
           }
           
-          // Avoid deep type inference by using a simple type
-          const profileData = data as { id: string }[];
+          // Use a simple literal type to avoid deep type inference
+          const profileData = data as Array<{ id: string }>;
           
           if (profileData && profileData.length > 0) {
             // This will need to be handled differently as admin.updateUserById is not available in the client
