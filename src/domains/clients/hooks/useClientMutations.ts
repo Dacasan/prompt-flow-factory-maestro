@@ -69,8 +69,8 @@ export function useClientMutations() {
             throw new Error(error.message);
           }
           
-          // Explicitly type the data to avoid deep type inference
-          const profileData: ProfileData[] | null = data as ProfileData[] | null;
+          // Using a simpler approach to avoid deep type inference
+          const profileData = data as any[];
           
           if (profileData && profileData.length > 0) {
             // This will need to be handled differently as admin.updateUserById is not available in the client
@@ -123,4 +123,47 @@ export function useClientMutations() {
     isDeleting: deleteClientMutation.isPending,
     isSendingMagicLink: sendMagicLinkMutation.isPending
   };
+}
+
+/**
+ * Creates a client with authentication
+ */
+export async function createClientWithAuth(data: {
+  email: string;
+  name: string;
+  password: string;
+  phone?: string;
+  address?: string;
+  logo_url?: string;
+}) {
+  try {
+    // 1. Create the user in Supabase Auth
+    const { data: authUser, error: signUpError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          full_name: data.name,
+          role: 'client'
+        }
+      }
+    });
+
+    if (signUpError) throw new Error(signUpError.message);
+
+    // 2. Create the client in business table
+    const clientRecord = await createClient({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      logo_url: data.logo_url
+    });
+
+    toast.success("Client created successfully");
+    return clientRecord;
+  } catch (err: any) {
+    toast.error(`Error creating client: ${err.message}`);
+    throw err;
+  }
 }
