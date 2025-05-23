@@ -56,7 +56,12 @@ export function useTickets() {
     const typedData = (data || []).map(ticket => {
       // Helper function to safely access properties
       const safeProfilesData = () => {
-        if (!ticket.profiles || typeof ticket.profiles !== 'object') {
+        // Check if profiles is null or undefined first
+        if (!ticket.profiles) {
+          return undefined;
+        }
+        
+        if (typeof ticket.profiles !== 'object') {
           return undefined;
         }
         
@@ -65,6 +70,7 @@ export function useTickets() {
           return undefined;
         }
         
+        // Cast to any to safely access properties
         const profiles = ticket.profiles as any;
         return {
           full_name: profiles?.full_name || '',
@@ -73,7 +79,12 @@ export function useTickets() {
       };
       
       const safeAssignedData = () => {
-        if (!ticket.assigned || typeof ticket.assigned !== 'object') {
+        // Check if assigned is null or undefined first
+        if (!ticket.assigned) {
+          return undefined;
+        }
+        
+        if (typeof ticket.assigned !== 'object') {
           return undefined;
         }
         
@@ -82,6 +93,7 @@ export function useTickets() {
           return undefined;
         }
         
+        // Cast to any to safely access properties
         const assigned = ticket.assigned as any;
         return {
           full_name: assigned?.full_name || '',
@@ -90,7 +102,11 @@ export function useTickets() {
       };
       
       const safeClientsData = () => {
-        if (!ticket.clients || typeof ticket.clients !== 'object') {
+        if (!ticket.clients) {
+          return undefined;
+        }
+        
+        if (typeof ticket.clients !== 'object') {
           return undefined;
         }
         

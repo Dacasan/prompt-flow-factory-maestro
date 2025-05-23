@@ -46,7 +46,9 @@ export function useClientMutations() {
   });
 
   // Fix for type instantiation issue - explicitly define the type
-  type ClientUpdateData = ClientFormData & { id: string };
+  interface ClientUpdateData extends ClientFormData { 
+    id: string;
+  }
   
   const updateClientMutation = useMutation({
     mutationFn: async (clientData: ClientUpdateData) => {
