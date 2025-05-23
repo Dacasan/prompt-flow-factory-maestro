@@ -11,12 +11,6 @@ import {
 } from "../services/clientsService";
 import type { ClientFormData } from "../types";
 
-// Define explicit types for Supabase query responses to avoid excessive type recursion
-type ProfileQueryResponse = {
-  data: Array<{ id: string }> | null;
-  error: Error | null;
-};
-
 export function useClientMutations() {
   const queryClient = useQueryClient();
 
@@ -60,14 +54,11 @@ export function useClientMutations() {
       if (password) {
         try {
           // Find users associated with this client's email
-          const result = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('id')
             .eq('email', data.email)
-            .limit(1);
-          
-          const profileData = result.data;
-          const profileError = result.error;
+            .limit(1) as { data: Array<{ id: string }> | null, error: Error | null };
           
           if (profileError) {
             throw new Error(profileError.message);
