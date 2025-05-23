@@ -45,8 +45,11 @@ export function useClientMutations() {
     }
   });
 
+  // Fix for type instantiation issue - explicitly define the type
+  type ClientUpdateData = ClientFormData & { id: string };
+  
   const updateClientMutation = useMutation({
-    mutationFn: async (clientData: ClientFormData & { id: string }) => {
+    mutationFn: async (clientData: ClientUpdateData) => {
       const { id, password, ...clientFields } = clientData;
       const updatedClient = await updateClient(id, clientFields);
       

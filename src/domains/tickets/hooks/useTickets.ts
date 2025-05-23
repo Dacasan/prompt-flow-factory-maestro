@@ -67,8 +67,8 @@ export function useTickets() {
         
         const profiles = ticket.profiles as any;
         return {
-          full_name: profiles.full_name || '',
-          avatar_url: profiles.avatar_url
+          full_name: profiles?.full_name || '',
+          avatar_url: profiles?.avatar_url
         };
       };
       
@@ -84,8 +84,8 @@ export function useTickets() {
         
         const assigned = ticket.assigned as any;
         return {
-          full_name: assigned.full_name || '',
-          avatar_url: assigned.avatar_url
+          full_name: assigned?.full_name || '',
+          avatar_url: assigned?.avatar_url
         };
       };
       
@@ -101,8 +101,8 @@ export function useTickets() {
         
         const clients = ticket.clients as any;
         return {
-          name: clients.name || '',
-          email: clients.email || ''
+          name: clients?.name || '',
+          email: clients?.email || ''
         };
       };
       
