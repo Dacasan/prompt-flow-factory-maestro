@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +25,8 @@ export function useClientMutations() {
             data: {
               full_name: clientData.name,
               role: 'client'
-            }
+            },
+            emailRedirectTo: undefined // Disable email confirmation
           }
         });
 
@@ -46,6 +46,17 @@ export function useClientMutations() {
           
           if (profileError) {
             console.error('Error updating profile with client_id:', profileError);
+          }
+
+          // Confirm the user's email using admin API to allow immediate login
+          const { error: confirmError } = await supabase.auth.admin.updateUserById(
+            authUser.user.id,
+            { email_confirm: true }
+          );
+          
+          if (confirmError) {
+            console.error('Error confirming user email:', confirmError);
+            toast.warning('User created but email verification failed. User may need to verify email manually.');
           }
         }
         

@@ -35,12 +35,26 @@ export function useTeam() {
           data: {
             full_name: full_name || email.split('@')[0],
             role: role
-          }
+          },
+          emailRedirectTo: undefined // Disable email confirmation
         }
       });
       
       if (authError) {
         throw new Error(`Failed to create user account: ${authError.message}`);
+      }
+      
+      // Confirm the user's email using admin API to allow immediate login
+      if (authUser.user) {
+        const { error: confirmError } = await supabase.auth.admin.updateUserById(
+          authUser.user.id,
+          { email_confirm: true }
+        );
+        
+        if (confirmError) {
+          console.error('Error confirming user email:', confirmError);
+          toast.warning('User created but email verification failed. User may need to verify email manually.');
+        }
       }
       
       // The user profile will be automatically created by the database trigger
