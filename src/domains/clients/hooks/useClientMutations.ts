@@ -6,8 +6,7 @@ import {
   createClient, 
   updateClient, 
   deleteClient, 
-  sendMagicLink,
-  createUserAccount 
+  sendMagicLink
 } from "../services/clientsService";
 import type { ClientFormData } from "../types";
 
@@ -18,23 +17,43 @@ export function useClientMutations() {
     mutationFn: async (clientData: ClientFormData) => {
       const { password, ...clientDbData } = clientData;
       
-      // First create the client in the database
-      const client = await createClient(clientDbData);
-      
-      // Then create a user account if password is provided
+      // First create the user in Supabase Auth
       if (password) {
-        try {
-          await createUserAccount(clientData.email, password, {
-            full_name: clientData.name,
-            role: 'client',
-            client_id: client.id
-          });
-        } catch (authError: any) {
-          toast.error(`Client created but couldn't create user: ${authError.message}`);
+        const { data: authUser, error: authError } = await supabase.auth.signUp({
+          email: clientData.email,
+          password: password,
+          options: {
+            data: {
+              full_name: clientData.name,
+              role: 'client'
+            }
+          }
+        });
+
+        if (authError) {
+          throw new Error(`Failed to create user account: ${authError.message}`);
         }
+
+        // Create the client in the database
+        const client = await createClient(clientDbData);
+        
+        // Update the user's profile with client_id
+        if (authUser.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ client_id: client.id })
+            .eq('id', authUser.user.id);
+          
+          if (profileError) {
+            console.error('Error updating profile with client_id:', profileError);
+          }
+        }
+        
+        return client;
+      } else {
+        // Create client without auth account
+        return await createClient(clientDbData);
       }
-      
-      return client;
     },
     onSuccess: () => {
       toast.success("Client created successfully");
@@ -45,40 +64,29 @@ export function useClientMutations() {
     }
   });
 
-  // Define a concrete type to avoid excessive type instantiation depth
-  interface ClientUpdateData { 
-    id: string;
-    name: string;
-    email: string;
-    phone?: string | null;
-    address?: string | null;
-    logo_url?: string | null;
-    password?: string;
-  }
-  
   const updateClientMutation = useMutation({
-    // Use the concrete type instead of extending from ClientFormData
-    mutationFn: async (clientData: ClientUpdateData) => {
+    mutationFn: async (clientData: ClientFormData & { id: string }) => {
       const { id, password, ...clientFields } = clientData;
       const updatedClient = await updateClient(id, clientFields);
       
       // Update user password if provided
       if (password) {
         try {
-          // Find users associated with this client's email
-          const { data, error } = await supabase
+          // Find the user profile for this client
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('id')
-            .eq('email', clientFields.email)
-            .limit(1);
+            .select('id, email')
+            .eq('client_id', id)
+            .eq('role', 'client')
+            .single();
           
-          if (error) {
-            throw new Error(error.message);
+          if (profileError) {
+            throw new Error(`Could not find user profile: ${profileError.message}`);
           }
           
-          if (data && data.length > 0) {
-            // This will need to be handled differently as admin.updateUserById is not available in the client
-            toast.warning(`Password update requires admin privileges`);
+          if (profile) {
+            // Note: Password updates require admin privileges in production
+            toast.warning(`Password update requires admin privileges. Please use the admin panel.`);
           }
         } catch (authError: any) {
           toast.error(`Client updated but couldn't update password: ${authError.message}`);
@@ -127,47 +135,4 @@ export function useClientMutations() {
     isDeleting: deleteClientMutation.isPending,
     isSendingMagicLink: sendMagicLinkMutation.isPending
   };
-}
-
-/**
- * Creates a client with authentication
- */
-export async function createClientWithAuth(data: {
-  email: string;
-  name: string;
-  password: string;
-  phone?: string;
-  address?: string;
-  logo_url?: string;
-}) {
-  try {
-    // 1. Create the user in Supabase Auth
-    const { data: authUser, error: signUpError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          full_name: data.name,
-          role: 'client'
-        }
-      }
-    });
-
-    if (signUpError) throw new Error(signUpError.message);
-
-    // 2. Create the client in business table
-    const clientRecord = await createClient({
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      address: data.address,
-      logo_url: data.logo_url
-    });
-
-    toast.success("Client created successfully");
-    return clientRecord;
-  } catch (err: any) {
-    toast.error(`Error creating client: ${err.message}`);
-    throw err;
-  }
 }

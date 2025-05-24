@@ -11,6 +11,7 @@ export function useTeam() {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
+      .in('role', ['admin', 'admin:member'])
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -26,61 +27,84 @@ export function useTeam() {
   });
   
   const inviteTeamMember = async ({ email, role, full_name, password }: { email: string; role: string; full_name?: string; password?: string }) => {
-    // First create the invitation
-    const { data, error } = await supabase
-      .from('invitations')
-      .insert({
+    // Create user account in Supabase Auth first
+    if (password) {
+      const { data: authUser, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: full_name || email.split('@')[0],
+            role: role
+          }
+        }
+      });
+      
+      if (authError) {
+        throw new Error(`Failed to create user account: ${authError.message}`);
+      }
+      
+      // The user profile will be automatically created by the database trigger
+      
+      // Create invitation record for tracking
+      const { data: invitation, error: invitationError } = await supabase
+        .from('invitations')
+        .insert({
+          email,
+          role,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          token: crypto.randomUUID(),
+          status: 'accepted' // Mark as accepted since user was created directly
+        })
+        .select()
+        .single();
+      
+      if (invitationError) {
+        console.error('Error creating invitation record:', invitationError);
+      }
+      
+      return {
+        id: authUser.user?.id || '',
         email,
         role,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        token: crypto.randomUUID(),
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      throw new Error(error.message);
-    }
-    
-    // If password is provided, create a user account directly
-    if (password) {
-      try {
-        const { error: authError } = await supabase.auth.signUp({
+        full_name: full_name || email.split('@')[0],
+        message: 'Team member created successfully'
+      } as InvitationResponse;
+    } else {
+      // Create invitation without user account (magic link flow)
+      const { data, error } = await supabase
+        .from('invitations')
+        .insert({
           email,
-          password,
-          options: {
-            data: {
-              full_name: full_name || email,
-              role: role
-            }
-          }
-        });
-        
-        if (authError) {
-          throw new Error(authError.message);
-        }
-      } catch (signupError: any) {
-        throw new Error(`Invitation created but couldn't create user: ${signupError.message}`);
+          role,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          token: crypto.randomUUID(),
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        throw new Error(error.message);
       }
+      
+      // Create a mock invite link for demo purposes
+      const inviteLink = `${window.location.origin}/auth?invitation=${data.token}`;
+      
+      return {
+        ...data,
+        inviteLink
+      } as InvitationResponse;
     }
-    
-    // Create a mock invite link for demo purposes
-    const inviteLink = `${window.location.origin}/auth?invitation=${data.token}`;
-    
-    return {
-      ...data,
-      inviteLink
-    } as InvitationResponse;
   };
   
   const inviteTeamMemberMutation = useMutation({
     mutationFn: inviteTeamMember,
     onSuccess: () => {
-      toast.success('Invitation sent successfully');
+      toast.success('Team member invited successfully');
       queryClient.invalidateQueries({ queryKey: ['team'] });
     },
     onError: (error: Error) => {
-      toast.error(`Error sending invitation: ${error.message}`);
+      toast.error(`Error inviting team member: ${error.message}`);
     }
   });
   
@@ -108,13 +132,19 @@ export function useTeam() {
   });
   
   const removeTeamMember = async (id: string) => {
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', id);
+    // First delete the user from auth (this will cascade to profiles due to RLS)
+    const { error: authError } = await supabase.auth.admin.deleteUser(id);
     
-    if (error) {
-      throw new Error(error.message);
+    if (authError) {
+      // If auth deletion fails, try deleting from profiles table directly
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+      
+      if (profileError) {
+        throw new Error(profileError.message);
+      }
     }
   };
   
@@ -153,12 +183,11 @@ export function useTeam() {
     }
   });
   
-  // Add a team property that returns the team members for compatibility
   const team = teamMembers;
   
   return {
     teamMembers,
-    team, // Add this line to expose team members as 'team'
+    team,
     isLoading,
     error,
     inviteTeamMember: inviteTeamMemberMutation.mutate,

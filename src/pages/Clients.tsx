@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { useClients } from "@/domains/clients/hooks/useClients";
+import { useClientMutations } from "@/domains/clients/hooks/useClientMutations";
 import { Client, ClientFormData } from "@/domains/clients/types";
 import { ClientForm } from "@/components/clients/ClientForm";
 import { ClientsTable } from "@/components/clients/ClientsTable";
@@ -26,9 +27,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Clients = () => {
+  const { clients, isLoading } = useClients();
   const { 
-    clients, 
-    isLoading, 
     createClient, 
     updateClient, 
     deleteClient, 
@@ -37,7 +37,7 @@ export const Clients = () => {
     isUpdating, 
     isDeleting,
     isSendingMagicLink
-  } = useClients();
+  } = useClientMutations();
   
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [currentClient, setCurrentClient] = useState<Client | null>(null);
