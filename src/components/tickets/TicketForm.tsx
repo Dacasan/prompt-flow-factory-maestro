@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Define the ticket form schema
 const TicketFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
@@ -116,7 +115,6 @@ export const TicketForm: React.FC<TicketFormProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {team.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.full_name}

@@ -8,7 +8,7 @@ import { useAuth } from "@/domains/auth/hooks/useAuth";
 import { Ticket } from "../types";
 
 export interface ExtendedTicket {
-  id: string; // Making id required explicitly
+  id: string;
   title: string;
   description?: string | null;
   status: string;
@@ -56,22 +56,18 @@ export function useTickets() {
     const typedData = (data || []).map(ticket => {
       // Helper function to safely access properties
       const safeProfilesData = () => {
-        // Check if profiles is null or undefined
         if (ticket.profiles == null) {
           return undefined;
         }
         
-        // Check object type
         if (typeof ticket.profiles !== 'object') {
           return undefined;
         }
         
-        // Check if it's an error object (Supabase returns specific error objects for failed joins)
         if (ticket.profiles && 'error' in ticket.profiles) {
           return undefined;
         }
         
-        // Safe access with type assertion
         const profiles = ticket.profiles as Record<string, unknown>;
         return {
           full_name: (profiles.full_name as string) || '',
@@ -80,22 +76,18 @@ export function useTickets() {
       };
       
       const safeAssignedData = () => {
-        // Check if assigned is null or undefined
         if (ticket.assigned == null) {
           return undefined;
         }
         
-        // Check object type
         if (typeof ticket.assigned !== 'object') {
           return undefined;
         }
         
-        // Check if it's an error object
         if (ticket.assigned && 'error' in ticket.assigned) {
           return undefined;
         }
         
-        // Safe access with type assertion
         const assigned = ticket.assigned as Record<string, unknown>;
         return {
           full_name: (assigned.full_name as string) || '',
@@ -104,22 +96,18 @@ export function useTickets() {
       };
       
       const safeClientsData = () => {
-        // Check if clients is null or undefined
         if (ticket.clients == null) {
           return undefined;
         }
         
-        // Check object type
         if (typeof ticket.clients !== 'object') {
           return undefined;
         }
         
-        // Check if it's an error object
         if (ticket.clients && 'error' in ticket.clients) {
           return undefined;
         }
         
-        // Safe access with type assertion
         const clients = ticket.clients as Record<string, unknown>;
         return {
           name: (clients.name as string) || '',
@@ -127,7 +115,6 @@ export function useTickets() {
         };
       };
       
-      // Explicitly construct the ticket object with all required fields
       return {
         id: ticket.id,
         title: ticket.title || '',
@@ -155,17 +142,25 @@ export function useTickets() {
   const createTicket = async (ticketData: {
     title: string;
     description?: string;
-    client_id: string;
+    client_id?: string;
     assigned_to?: string;
   }) => {
+    // Get the first admin user to assign tickets to
+    const { data: adminUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .in('role', ['admin', 'admin:member'])
+      .limit(1)
+      .single();
+
     const { data, error } = await supabase
       .from('tickets')
       .insert({
         title: ticketData.title,
         description: ticketData.description || null,
-        client_id: ticketData.client_id,
+        client_id: ticketData.client_id || user?.client_id || '',
         created_by: user?.id,
-        assigned_to: ticketData.assigned_to || null,
+        assigned_to: adminUser?.id || null,
         status: 'open'
       })
       .select()
@@ -215,6 +210,32 @@ export function useTickets() {
     }
   });
   
+  const reassignTicket = async ({ id, assigned_to }: { id: string; assigned_to: string }) => {
+    const { data, error } = await supabase
+      .from('tickets')
+      .update({ assigned_to })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      throw new Error(error.message);
+    }
+    
+    return data;
+  };
+  
+  const reassignTicketMutation = useMutation({
+    mutationFn: reassignTicket,
+    onSuccess: () => {
+      toast.success(`Ticket reassigned successfully`);
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Error reassigning ticket: ${error.message}`);
+    }
+  });
+  
   return {
     tickets,
     clients,
@@ -223,7 +244,9 @@ export function useTickets() {
     error,
     createTicket: createTicketMutation.mutate,
     updateTicketStatus: updateTicketStatusMutation.mutate,
+    reassignTicket: reassignTicketMutation.mutate,
     isCreating: createTicketMutation.isPending,
     isUpdating: updateTicketStatusMutation.isPending,
+    isReassigning: reassignTicketMutation.isPending,
   };
 }

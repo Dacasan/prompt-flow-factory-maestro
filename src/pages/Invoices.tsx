@@ -34,6 +34,18 @@ export const Invoices = () => {
     });
   };
 
+  // Transform orders to match the expected format for InvoiceForm
+  const formattedOrders = orders ? orders.map(order => ({
+    id: order.id || '',
+    clients: order.clients ? {
+      name: order.clients.name || ''
+    } : undefined,
+    services: order.services ? {
+      name: order.services.name || ''
+    } : undefined,
+    total_amount: order.total_amount || 0
+  })) : [];
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -55,7 +67,7 @@ export const Invoices = () => {
             <div className="py-6">
               <InvoiceForm
                 clients={clients || []}
-                orders={orders || []}
+                orders={formattedOrders}
                 onInvoiceCreate={handleCreateSubmit}
                 isSubmitting={isCreating}
               />

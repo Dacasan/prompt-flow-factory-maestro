@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +16,7 @@ import { Services } from "./pages/Services";
 import { Orders } from "./pages/Orders";
 import { Tasks } from "./pages/Tasks";
 import { Tickets } from "./pages/Tickets";
+import { ClientTickets } from "./pages/ClientTickets";
 import { ClientDashboard } from "./pages/ClientDashboard";
 import { ClientServices } from "./pages/ClientServices";
 import { Invoices } from "./pages/Invoices";
@@ -87,7 +89,15 @@ const App = () => (
             } />
             <Route path="/tickets" element={
               <ProtectedRoute>
-                <AppLayout><Tickets /></AppLayout>
+                <AppLayout>
+                  {/* Show different ticket pages based on user role */}
+                  <ProtectedRoute requiredRole="client">
+                    <ClientTickets />
+                  </ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
+                    <Tickets />
+                  </ProtectedRoute>
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/invoices" element={

@@ -34,7 +34,17 @@ export function useInvoices() {
       throw new Error(error.message);
     }
     
-    return data as ExtendedInvoice[];
+    // Transform data to match ExtendedInvoice type
+    return data.map(invoice => ({
+      id: invoice.id,
+      number: `INV-${invoice.id.slice(0, 8)}`,
+      status: invoice.status || 'pending',
+      issue_date: invoice.created_at,
+      due_date: invoice.due_date || invoice.created_at,
+      total_amount: invoice.amount || 0,
+      clients: invoice.clients,
+      pdf_url: null
+    })) as ExtendedInvoice[];
   };
   
   const { data: invoices = [], isLoading, error } = useQuery({
@@ -53,18 +63,13 @@ export function useInvoices() {
     tax_amount: number;
     total_amount: number;
   }) => {
-    // Generate invoice number
-    const invoiceNumber = `INV-${Date.now()}`;
-    
     const { data, error } = await supabase
       .from('invoices')
       .insert({
         client_id: invoiceData.client_id,
         order_id: invoiceData.order_id,
-        number: invoiceNumber,
-        issue_date: invoiceData.issue_date.toISOString(),
         due_date: invoiceData.due_date.toISOString(),
-        total_amount: invoiceData.total_amount,
+        amount: invoiceData.total_amount,
         status: 'pending'
       })
       .select()
@@ -72,23 +77,6 @@ export function useInvoices() {
     
     if (error) {
       throw new Error(error.message);
-    }
-    
-    // Create invoice items
-    const itemsWithInvoiceId = invoiceData.items.map(item => ({
-      invoice_id: data.id,
-      description: item.description,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      amount: item.quantity * item.unit_price
-    }));
-    
-    const { error: itemsError } = await supabase
-      .from('invoice_items')
-      .insert(itemsWithInvoiceId);
-    
-    if (itemsError) {
-      console.error('Failed to create invoice items:', itemsError);
     }
     
     return data;

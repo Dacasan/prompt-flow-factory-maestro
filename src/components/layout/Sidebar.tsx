@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ type SidebarItem = {
   href: string;
   icon: React.ElementType;
   adminOnly?: boolean;
+  clientOnly?: boolean;
 };
 
 export function Sidebar() {
@@ -33,12 +35,19 @@ export function Sidebar() {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const isAdmin = user?.role === "admin" || user?.role === "admin:member";
+  const isClient = user?.role === "client";
   
   const items: SidebarItem[] = [
     {
       title: "Dashboard",
-      href: "/",
+      href: isClient ? "/client" : "/",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Services",
+      href: "/client/services",
+      icon: ShoppingBag,
+      clientOnly: true,
     },
     {
       title: "Clients",
@@ -56,11 +65,13 @@ export function Sidebar() {
       title: "Orders",
       href: "/orders",
       icon: ShoppingBag,
+      adminOnly: true,
     },
     {
       title: "Tasks",
       href: "/tasks",
       icon: CheckSquare,
+      adminOnly: true,
     },
     {
       title: "Tickets",
@@ -71,6 +82,7 @@ export function Sidebar() {
       title: "Invoices",
       href: "/invoices",
       icon: FileText,
+      adminOnly: true,
     },
     {
       title: "Marketing",
@@ -113,7 +125,7 @@ export function Sidebar() {
     >
       <div className="flex items-center justify-between p-4 border-b">
         {!collapsed && (
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to={isClient ? "/client" : "/"} className="flex items-center space-x-2">
             <span className="font-bold text-xl bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
               FluxFlow
             </span>
@@ -131,7 +143,9 @@ export function Sidebar() {
       <div className="flex flex-col flex-1 py-4 overflow-y-auto">
         <nav className="flex-1 px-2 space-y-1">
           {items.map((item) => {
+            // Filter items based on user role
             if (item.adminOnly && !isAdmin) return null;
+            if (item.clientOnly && !isClient) return null;
             
             const isActive = location.pathname === item.href;
             
