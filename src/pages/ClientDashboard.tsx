@@ -53,15 +53,15 @@ export const ClientDashboard = () => {
   ];
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
+    <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome back!</h1>
         <p className="text-muted-foreground">
           Hello {user?.full_name || user?.email}, manage your services and orders from here.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {quickActions.map((action, index) => (
           <Card key={index} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={action.action}>
             <CardHeader className="pb-3">
@@ -77,7 +77,7 @@ export const ClientDashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
@@ -87,8 +87,8 @@ export const ClientDashboard = () => {
             {recentOrders.length > 0 ? (
               <div className="space-y-4">
                 {recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                    <div>
+                  <div key={order.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 last:border-0 last:pb-0 gap-2">
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium">Order #{order.id?.slice(-8)}</p>
                       <p className="text-sm text-muted-foreground">
                         {order.services?.name} - ${order.total_amount}
@@ -97,7 +97,7 @@ export const ClientDashboard = () => {
                         Status: {order.status}
                       </p>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground self-start sm:self-center">
                       {new Date(order.created_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -114,20 +114,20 @@ export const ClientDashboard = () => {
             <CardTitle>Account Status</CardTitle>
             <CardDescription>Your account information</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between">
+          <CardContent className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <span className="text-sm font-medium">Status:</span>
               <span className="text-sm text-green-600">Active</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <span className="text-sm font-medium">Email:</span>
-              <span className="text-sm">{user?.email}</span>
+              <span className="text-sm break-all">{user?.email}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <span className="text-sm font-medium">Total Orders:</span>
               <span className="text-sm">{clientOrders.length}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <span className="text-sm font-medium">Open Tickets:</span>
               <span className="text-sm">{openTickets.length}</span>
             </div>

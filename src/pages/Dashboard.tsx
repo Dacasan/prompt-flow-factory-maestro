@@ -21,7 +21,7 @@ export function Dashboard() {
     order.status === 'pending' || order.status === 'in_progress'
   );
   const pendingTasks = tasks.filter(task => 
-    task.status === 'to_do' || task.status === 'in_progress'
+    task.status === 'todo' || task.status === 'doing'
   );
   const openTickets = tickets.filter(ticket => ticket.status === 'open');
   const recentOrders = orders.slice(0, 5);
@@ -60,15 +60,15 @@ export function Dashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 px-4 sm:px-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
           Welcome back, {user?.full_name || "User"}!
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -81,8 +81,8 @@ export function Dashboard() {
               <div className="text-2xl font-bold">{stat.value}</div>
             </CardContent>
             <CardFooter>
-              <Link to={stat.href}>
-                <Button variant="ghost" size="sm" className="gap-1">
+              <Link to={stat.href} className="w-full">
+                <Button variant="ghost" size="sm" className="gap-1 w-full justify-start">
                   View all <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
@@ -91,7 +91,7 @@ export function Dashboard() {
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Recent Tasks</CardTitle>
@@ -100,15 +100,15 @@ export function Dashboard() {
           <CardContent className="space-y-4">
             {recentTasks.length > 0 ? (
               recentTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                  <div>
-                    <p className="font-medium">{task.title}</p>
+                <div key={task.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 last:border-0 last:pb-0 gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{task.title}</p>
                     <p className="text-sm text-muted-foreground">
                       Status: {task.status} 
                       {task.due_date && ` - Due: ${new Date(task.due_date).toLocaleDateString()}`}
                     </p>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="self-start sm:self-center">
                     View
                   </Button>
                 </div>
@@ -118,8 +118,8 @@ export function Dashboard() {
             )}
           </CardContent>
           <CardFooter>
-            <Link to="/tasks">
-              <Button variant="outline" size="sm">
+            <Link to="/tasks" className="w-full">
+              <Button variant="outline" size="sm" className="w-full">
                 View All Tasks
               </Button>
             </Link>
@@ -134,14 +134,14 @@ export function Dashboard() {
           <CardContent className="space-y-4">
             {recentTickets.length > 0 ? (
               recentTickets.map((ticket) => (
-                <div key={ticket.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                  <div>
-                    <p className="font-medium">{ticket.title}</p>
+                <div key={ticket.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 last:border-0 last:pb-0 gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{ticket.title}</p>
                     <p className="text-sm text-muted-foreground">
                       Status: {ticket.status} - {new Date(ticket.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="self-start sm:self-center">
                     View
                   </Button>
                 </div>
@@ -151,8 +151,8 @@ export function Dashboard() {
             )}
           </CardContent>
           <CardFooter>
-            <Link to="/tickets">
-              <Button variant="outline" size="sm">
+            <Link to="/tickets" className="w-full">
+              <Button variant="outline" size="sm" className="w-full">
                 View All Tickets
               </Button>
             </Link>
@@ -170,9 +170,9 @@ export function Dashboard() {
             <div className="space-y-4">
               {recentOrders.length > 0 ? (
                 recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                    <div>
-                      <p className="font-medium">Order #{order.id?.slice(-8)}</p>
+                  <div key={order.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 last:border-0 last:pb-0 gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">Order #{order.id?.slice(-8)}</p>
                       <p className="text-sm text-muted-foreground">
                         {order.clients?.name || 'Unknown Client'} - {order.services?.name}
                       </p>
@@ -180,8 +180,8 @@ export function Dashboard() {
                         Status: {order.status}
                       </p>
                     </div>
-                    <div className="flex items-center">
-                      <span className="text-sm mr-4">${order.total_amount}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <span className="text-sm font-medium">${order.total_amount}</span>
                       <Button variant="ghost" size="sm">
                         Details
                       </Button>
@@ -194,8 +194,8 @@ export function Dashboard() {
             </div>
           </CardContent>
           <CardFooter>
-            <Link to="/orders">
-              <Button variant="outline">View All Orders</Button>
+            <Link to="/orders" className="w-full">
+              <Button variant="outline" className="w-full">View All Orders</Button>
             </Link>
           </CardFooter>
         </Card>
