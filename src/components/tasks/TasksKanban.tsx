@@ -9,7 +9,8 @@ import {
   useSensors,
   DragEndEvent,
   DragOverlay,
-  DragStartEvent
+  DragStartEvent,
+  DragOverEvent
 } from "@dnd-kit/core";
 import { 
   SortableContext, 
@@ -20,6 +21,68 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskCard } from "./TaskCard";
 import { ExtendedTask } from "@/domains/tasks/hooks/useTasks";
 import { useState } from "react";
+import { useDroppable } from "@dnd-kit/core";
+
+interface TaskColumnProps {
+  id: string;
+  title: string;
+  tasks: ExtendedTask[];
+  count: number;
+  isUpdating: boolean;
+}
+
+const TaskColumn: React.FC<TaskColumnProps> = ({ id, title, tasks, count, isUpdating }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: id,
+  });
+
+  return (
+    <Card className="bg-background">
+      <CardHeader className="bg-muted/50 rounded-t-md">
+        <CardTitle className="text-lg">{title} ({count})</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <SortableContext
+          items={tasks.map(task => task.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div 
+            ref={setNodeRef}
+            className={`space-y-4 min-h-[200px] p-2 rounded-md border-2 border-dashed transition-colors ${
+              isOver ? 'border-primary bg-primary/5' : 'border-transparent'
+            }`}
+          >
+            {tasks.length > 0 ? tasks.map(task => (
+              <TaskCard 
+                key={task.id}
+                task={{
+                  id: task.id,
+                  title: task.title,
+                  description: task.description,
+                  status: task.status,
+                  due_date: task.due_date,
+                  assignee: task.assignee ? {
+                    name: task.assignee.full_name,
+                    avatar_url: task.assignee.avatar_url
+                  } : undefined,
+                  order: task.order ? {
+                    id: task.order.id,
+                    client: task.order.clients ? {
+                      name: task.order.clients.name
+                    } : undefined
+                  } : undefined
+                }}
+                disabled={isUpdating}
+              />
+            )) : (
+              <p className="text-muted-foreground text-center py-8">No tasks</p>
+            )}
+          </div>
+        </SortableContext>
+      </CardContent>
+    </Card>
+  );
+};
 
 interface TasksKanbanProps {
   tasks: ExtendedTask[];
@@ -51,6 +114,10 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
     setActiveTask(task || null);
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    // Optional: Handle drag over events if needed
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
@@ -60,8 +127,12 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
     const taskId = active.id.toString();
     const newStatus = over.id.toString();
     
-    if (newStatus === "todo" || newStatus === "doing" || newStatus === "done") {
-      onDragEnd(taskId, newStatus);
+    // Only update if the status is different
+    const currentTask = tasks.find(t => t.id === taskId);
+    if (currentTask && currentTask.status !== newStatus) {
+      if (newStatus === "todo" || newStatus === "doing" || newStatus === "done") {
+        onDragEnd(taskId, newStatus);
+      }
     }
   };
 
@@ -98,83 +169,33 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Todo Column */}
-        <Card className="bg-background">
-          <CardHeader className="bg-muted/50 rounded-t-md">
-            <CardTitle className="text-lg">To Do ({todoTasks.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <SortableContext
-              items={todoTasks.map(task => task.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div 
-                id="todo" 
-                className="space-y-4 min-h-[200px] p-2 rounded-md border-2 border-dashed border-transparent"
-                style={{
-                  borderColor: activeTask && activeTask.status !== "todo" ? "#e2e8f0" : "transparent"
-                }}
-              >
-                {todoTasks.length > 0 ? todoTasks.map(renderTaskCard) : (
-                  <p className="text-muted-foreground text-center py-8">No tasks</p>
-                )}
-              </div>
-            </SortableContext>
-          </CardContent>
-        </Card>
-
-        {/* Doing Column */}
-        <Card className="bg-background">
-          <CardHeader className="bg-muted/50 rounded-t-md">
-            <CardTitle className="text-lg">Doing ({doingTasks.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <SortableContext
-              items={doingTasks.map(task => task.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div 
-                id="doing" 
-                className="space-y-4 min-h-[200px] p-2 rounded-md border-2 border-dashed border-transparent"
-                style={{
-                  borderColor: activeTask && activeTask.status !== "doing" ? "#e2e8f0" : "transparent"
-                }}
-              >
-                {doingTasks.length > 0 ? doingTasks.map(renderTaskCard) : (
-                  <p className="text-muted-foreground text-center py-8">No tasks</p>
-                )}
-              </div>
-            </SortableContext>
-          </CardContent>
-        </Card>
-
-        {/* Done Column */}
-        <Card className="bg-background">
-          <CardHeader className="bg-muted/50 rounded-t-md">
-            <CardTitle className="text-lg">Done ({doneTasks.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <SortableContext
-              items={doneTasks.map(task => task.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div 
-                id="done" 
-                className="space-y-4 min-h-[200px] p-2 rounded-md border-2 border-dashed border-transparent"
-                style={{
-                  borderColor: activeTask && activeTask.status !== "done" ? "#e2e8f0" : "transparent"
-                }}
-              >
-                {doneTasks.length > 0 ? doneTasks.map(renderTaskCard) : (
-                  <p className="text-muted-foreground text-center py-8">No tasks</p>
-                )}
-              </div>
-            </SortableContext>
-          </CardContent>
-        </Card>
+        <TaskColumn 
+          id="todo"
+          title="To Do"
+          tasks={todoTasks}
+          count={todoTasks.length}
+          isUpdating={isUpdating}
+        />
+        
+        <TaskColumn 
+          id="doing"
+          title="Doing"
+          tasks={doingTasks}
+          count={doingTasks.length}
+          isUpdating={isUpdating}
+        />
+        
+        <TaskColumn 
+          id="done"
+          title="Done"
+          tasks={doneTasks}
+          count={doneTasks.length}
+          isUpdating={isUpdating}
+        />
       </div>
 
       <DragOverlay>
@@ -182,4 +203,4 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
       </DragOverlay>
     </DndContext>
   );
-}
+};

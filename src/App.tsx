@@ -19,6 +19,7 @@ import { Tickets } from "./pages/Tickets";
 import { ClientTickets } from "./pages/ClientTickets";
 import { ClientDashboard } from "./pages/ClientDashboard";
 import { ClientServices } from "./pages/ClientServices";
+import { ClientInvoices } from "./pages/ClientInvoices";
 import { Invoices } from "./pages/Invoices";
 
 const queryClient = new QueryClient({
@@ -54,10 +55,24 @@ const App = () => (
                 </AppLayout>
               </ProtectedRoute>
             } />
+            <Route path="/client/tickets" element={
+              <ProtectedRoute requiredRole="client">
+                <AppLayout>
+                  <ClientTickets />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/client/invoices" element={
+              <ProtectedRoute requiredRole="client">
+                <AppLayout>
+                  <ClientInvoices />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
             
-            {/* Protected routes */}
+            {/* Admin/Team routes */}
             <Route path="/" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="admin">
                 <AppLayout>
                   <Dashboard />
                 </AppLayout>
@@ -78,35 +93,29 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/orders" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="admin">
                 <AppLayout><Orders /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/tasks" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="admin">
                 <AppLayout><Tasks /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/tickets" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="admin">
                 <AppLayout>
-                  {/* Show different ticket pages based on user role */}
-                  <ProtectedRoute requiredRole="client">
-                    <ClientTickets />
-                  </ProtectedRoute>
-                  <ProtectedRoute requiredRole="admin">
-                    <Tickets />
-                  </ProtectedRoute>
+                  <Tickets />
                 </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/invoices" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="admin">
                 <AppLayout><Invoices /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/marketing" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="admin">
                 <AppLayout><div>Marketing Page</div></AppLayout>
               </ProtectedRoute>
             } />

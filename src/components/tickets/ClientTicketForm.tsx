@@ -33,9 +33,15 @@ export const ClientTicketForm: React.FC<ClientTicketFormProps> = ({
     },
   });
 
+  const handleSubmit = (data: ClientTicketFormValues) => {
+    // Reset form after successful submission
+    form.reset();
+    onTicketCreate(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onTicketCreate)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="title"

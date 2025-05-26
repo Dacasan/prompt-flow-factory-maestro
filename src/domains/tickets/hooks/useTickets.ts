@@ -52,21 +52,11 @@ export function useTickets() {
       throw new Error(error.message);
     }
     
-    // Ensure all returned tickets have the required id field and handle possible null values
     const typedData = (data || []).map(ticket => {
-      // Helper function to safely access properties
       const safeProfilesData = () => {
-        if (ticket.profiles == null) {
-          return undefined;
-        }
-        
-        if (typeof ticket.profiles !== 'object') {
-          return undefined;
-        }
-        
-        if (ticket.profiles && 'error' in ticket.profiles) {
-          return undefined;
-        }
+        if (ticket.profiles == null) return undefined;
+        if (typeof ticket.profiles !== 'object') return undefined;
+        if (ticket.profiles && 'error' in ticket.profiles) return undefined;
         
         const profiles = ticket.profiles as Record<string, unknown>;
         return {
@@ -76,17 +66,9 @@ export function useTickets() {
       };
       
       const safeAssignedData = () => {
-        if (ticket.assigned == null) {
-          return undefined;
-        }
-        
-        if (typeof ticket.assigned !== 'object') {
-          return undefined;
-        }
-        
-        if (ticket.assigned && 'error' in ticket.assigned) {
-          return undefined;
-        }
+        if (ticket.assigned == null) return undefined;
+        if (typeof ticket.assigned !== 'object') return undefined;
+        if (ticket.assigned && 'error' in ticket.assigned) return undefined;
         
         const assigned = ticket.assigned as Record<string, unknown>;
         return {
@@ -96,17 +78,9 @@ export function useTickets() {
       };
       
       const safeClientsData = () => {
-        if (ticket.clients == null) {
-          return undefined;
-        }
-        
-        if (typeof ticket.clients !== 'object') {
-          return undefined;
-        }
-        
-        if (ticket.clients && 'error' in ticket.clients) {
-          return undefined;
-        }
+        if (ticket.clients == null) return undefined;
+        if (typeof ticket.clients !== 'object') return undefined;
+        if (ticket.clients && 'error' in ticket.clients) return undefined;
         
         const clients = ticket.clients as Record<string, unknown>;
         return {
@@ -173,17 +147,6 @@ export function useTickets() {
     return data;
   };
   
-  const createTicketMutation = useMutation({
-    mutationFn: createTicket,
-    onSuccess: () => {
-      toast.success('Ticket created successfully');
-      queryClient.invalidateQueries({ queryKey: ['tickets'] });
-    },
-    onError: (error: Error) => {
-      toast.error(`Error creating ticket: ${error.message}`);
-    }
-  });
-  
   const updateTicketStatus = async ({ id, status }: { id: string; status: string }) => {
     const { data, error } = await supabase
       .from('tickets')
@@ -198,17 +161,6 @@ export function useTickets() {
     
     return data;
   };
-  
-  const updateTicketStatusMutation = useMutation({
-    mutationFn: updateTicketStatus,
-    onSuccess: () => {
-      toast.success(`Ticket status updated`);
-      queryClient.invalidateQueries({ queryKey: ['tickets'] });
-    },
-    onError: (error: Error) => {
-      toast.error(`Error updating ticket: ${error.message}`);
-    }
-  });
   
   const reassignTicket = async ({ id, assigned_to }: { id: string; assigned_to: string }) => {
     const { data, error } = await supabase
@@ -225,14 +177,32 @@ export function useTickets() {
     return data;
   };
   
-  const reassignTicketMutation = useMutation({
-    mutationFn: reassignTicket,
-    onSuccess: () => {
-      toast.success(`Ticket reassigned successfully`);
+  // Single mutation for all ticket operations
+  const ticketMutation = useMutation({
+    mutationFn: async (action: any) => {
+      switch (action.type) {
+        case 'create':
+          return createTicket(action.data);
+        case 'updateStatus':
+          return updateTicketStatus(action.data);
+        case 'reassign':
+          return reassignTicket(action.data);
+        default:
+          throw new Error('Unknown action type');
+      }
+    },
+    onSuccess: (data, variables) => {
+      const messages = {
+        create: 'Ticket created successfully',
+        updateStatus: 'Ticket status updated',
+        reassign: 'Ticket reassigned successfully'
+      };
+      toast.success(messages[variables.type as keyof typeof messages]);
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: Error) => {
-      toast.error(`Error reassigning ticket: ${error.message}`);
+    onError: (error: Error, variables) => {
+      const action = variables.type;
+      toast.error(`Error ${action === 'create' ? 'creating' : action === 'updateStatus' ? 'updating' : 'reassigning'} ticket: ${error.message}`);
     }
   });
   
@@ -242,11 +212,11 @@ export function useTickets() {
     team,
     isLoading,
     error,
-    createTicket: createTicketMutation.mutate,
-    updateTicketStatus: updateTicketStatusMutation.mutate,
-    reassignTicket: reassignTicketMutation.mutate,
-    isCreating: createTicketMutation.isPending,
-    isUpdating: updateTicketStatusMutation.isPending,
-    isReassigning: reassignTicketMutation.isPending,
+    createTicket: (data: any, options?: any) => ticketMutation.mutate({ type: 'create', data }, options),
+    updateTicketStatus: (data: any, options?: any) => ticketMutation.mutate({ type: 'updateStatus', data }, options),
+    reassignTicket: (data: any, options?: any) => ticketMutation.mutate({ type: 'reassign', data }, options),
+    isCreating: ticketMutation.isPending,
+    isUpdating: ticketMutation.isPending,
+    isReassigning: ticketMutation.isPending,
   };
 }
