@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,7 @@ import { Tasks } from "./pages/Tasks";
 import { Tickets } from "./pages/Tickets";
 import { ClientDashboard } from "./pages/ClientDashboard";
 import { ClientServices } from "./pages/ClientServices";
+import { Invoices } from "./pages/Invoices";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,7 +92,7 @@ const App = () => (
             } />
             <Route path="/invoices" element={
               <ProtectedRoute>
-                <AppLayout><div>Invoices Page</div></AppLayout>
+                <AppLayout><Invoices /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/marketing" element={

@@ -4,20 +4,17 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Client } from "@/domains/clients/types";
 import { Service } from "@/domains/services/types";
 import { DatePicker } from "@/components/ui/date-picker";
-import { format, addDays } from "date-fns";
 
-// Define the order form schema
+// Define the order form schema without total_amount
 const OrderFormSchema = z.object({
   client_id: z.string().min(1, "Client is required"),
   service_id: z.string().min(1, "Service is required"),
-  total_amount: z.number().min(0, "Amount must be a positive number"),
   estimated_delivery_date: z.date().optional(),
 });
 
@@ -26,7 +23,7 @@ type OrderFormValues = z.infer<typeof OrderFormSchema>;
 interface OrderFormProps {
   clients: Client[];
   services: Service[];
-  onOrderCreate: (data: OrderFormValues) => void;
+  onOrderCreate: (data: OrderFormValues & { total_amount: number }) => void;
   isSubmitting?: boolean;
 }
 
@@ -41,24 +38,24 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     defaultValues: {
       client_id: "",
       service_id: "",
-      total_amount: 0,
     },
   });
 
-  // Update total amount when service changes
   const watchServiceId = form.watch("service_id");
-  React.useEffect(() => {
-    if (watchServiceId) {
-      const selectedService = services.find(s => s.id === watchServiceId);
-      if (selectedService) {
-        form.setValue("total_amount", selectedService.price);
-      }
+  const selectedService = services.find(s => s.id === watchServiceId);
+
+  const handleSubmit = (data: OrderFormValues) => {
+    if (selectedService) {
+      onOrderCreate({
+        ...data,
+        total_amount: selectedService.price
+      });
     }
-  }, [watchServiceId, services, form]);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onOrderCreate)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="client_id"
@@ -109,24 +106,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="total_amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Total Amount</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number"
-                  placeholder="0.00" 
-                  {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {selectedService && (
+          <div className="bg-muted p-3 rounded-md">
+            <p className="text-sm font-medium">Selected Service Price: ${selectedService.price}</p>
+          </div>
+        )}
 
         <FormField
           control={form.control}
@@ -144,7 +128,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           )}
         />
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+        <Button type="submit" disabled={isSubmitting || !selectedService} className="w-full">
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

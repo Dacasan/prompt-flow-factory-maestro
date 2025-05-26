@@ -44,7 +44,8 @@ export function useOrders() {
     total_amount: number;
     estimated_delivery_date?: Date;
   }) => {
-    const { data, error } = await supabase
+    // Create the order
+    const { data: orderResult, error: orderError } = await supabase
       .from('orders')
       .insert({
         client_id: orderData.client_id,
@@ -56,18 +57,52 @@ export function useOrders() {
       .select()
       .single();
     
-    if (error) {
-      throw new Error(error.message);
+    if (orderError) {
+      throw new Error(orderError.message);
+    }
+
+    // Get service name for task title
+    const { data: serviceData } = await supabase
+      .from('services')
+      .select('name')
+      .eq('id', orderData.service_id)
+      .single();
+
+    // Get client name for task description
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('name')
+      .eq('id', orderData.client_id)
+      .single();
+
+    // Create a corresponding task
+    const taskTitle = `Complete ${serviceData?.name || 'Service'} Order`;
+    const taskDescription = `Process order for ${clientData?.name || 'Client'}. Service: ${serviceData?.name || 'Unknown Service'}`;
+
+    const { error: taskError } = await supabase
+      .from('tasks')
+      .insert({
+        title: taskTitle,
+        description: taskDescription,
+        order_id: orderResult.id,
+        status: 'to_do',
+        due_date: orderData.estimated_delivery_date ? orderData.estimated_delivery_date.toISOString() : null
+      });
+
+    if (taskError) {
+      console.error('Failed to create task:', taskError);
+      // Don't throw here - order creation was successful
     }
     
-    return data as Order;
+    return orderResult as Order;
   };
   
   const createOrderMutation = useMutation({
     mutationFn: createOrder,
     onSuccess: () => {
-      toast.success('Order created successfully');
+      toast.success('Order created successfully with associated task');
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
     onError: (error: Error) => {
       toast.error(`Error creating order: ${error.message}`);
