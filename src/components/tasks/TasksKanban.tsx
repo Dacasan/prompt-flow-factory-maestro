@@ -1,7 +1,6 @@
-
-import React from "react";
-import { 
-  DndContext, 
+import React, { useState } from "react";
+import {
+  DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
@@ -10,18 +9,17 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  DragOverEvent
+  DragOverEvent,
+  useDroppable,
 } from "@dnd-kit/core";
-import { 
-  SortableContext, 
+import {
+  SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy 
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskCard } from "./TaskCard";
 import { ExtendedTask } from "@/domains/tasks/hooks/useTasks";
-import { useState } from "react";
-import { useDroppable } from "@dnd-kit/core";
 
 interface TaskColumnProps {
   id: string;
@@ -39,42 +37,52 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ id, title, tasks, count, isUpda
   return (
     <Card className="bg-background">
       <CardHeader className="bg-muted/50 rounded-t-md">
-        <CardTitle className="text-lg">{title} ({count})</CardTitle>
+        <CardTitle className="text-lg">
+          {title} ({count})
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
         <SortableContext
-          items={tasks.map(task => task.id)}
+          items={tasks.map((task) => task.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div 
+          <div
             ref={setNodeRef}
             className={`space-y-4 min-h-[200px] p-2 rounded-md border-2 border-dashed transition-colors ${
-              isOver ? 'border-primary bg-primary/5' : 'border-transparent'
+              isOver ? "border-primary bg-primary/5" : "border-transparent"
             }`}
           >
-            {tasks.length > 0 ? tasks.map(task => (
-              <TaskCard 
-                key={task.id}
-                task={{
-                  id: task.id,
-                  title: task.title,
-                  description: task.description,
-                  status: task.status,
-                  due_date: task.due_date,
-                  assignee: task.assignee ? {
-                    name: task.assignee.full_name,
-                    avatar_url: task.assignee.avatar_url
-                  } : undefined,
-                  order: task.order ? {
-                    id: task.order.id,
-                    client: task.order.clients ? {
-                      name: task.order.clients.name
-                    } : undefined
-                  } : undefined
-                }}
-                disabled={isUpdating}
-              />
-            )) : (
+            {tasks.length > 0 ? (
+              tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={{
+                    id: task.id,
+                    title: task.title,
+                    description: task.description,
+                    status: task.status,
+                    due_date: task.due_date,
+                    assignee: task.assignee
+                      ? {
+                          name: task.assignee.full_name,
+                          avatar_url: task.assignee.avatar_url,
+                        }
+                      : undefined,
+                    order: task.order
+                      ? {
+                          id: task.order.id,
+                          client: task.order.clients
+                            ? {
+                                name: task.order.clients.name,
+                              }
+                            : undefined,
+                        }
+                      : undefined,
+                  }}
+                  disabled={isUpdating}
+                />
+              ))
+            ) : (
               <p className="text-muted-foreground text-center py-8">No tasks</p>
             )}
           </div>
@@ -90,10 +98,10 @@ interface TasksKanbanProps {
   isUpdating: boolean;
 }
 
-export const TasksKanban: React.FC<TasksKanbanProps> = ({ 
-  tasks, 
+export const TasksKanban: React.FC<TasksKanbanProps> = ({
+  tasks,
   onDragEnd,
-  isUpdating 
+  isUpdating,
 }) => {
   const [activeTask, setActiveTask] = useState<ExtendedTask | null>(null);
 
@@ -110,7 +118,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const task = tasks.find(t => t.id === active.id);
+    const task = tasks.find((t) => t.id === active.id);
     setActiveTask(task || null);
   };
 
@@ -121,27 +129,26 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
-    
+
     if (!over) return;
-    
+
     const taskId = active.id.toString();
-    const newStatus = over.id.toString();
-    
-    // Only update if the status is different
-    const currentTask = tasks.find(t => t.id === taskId);
+    const newStatus = over.id.toString().replace("column-", "");
+
+    const currentTask = tasks.find((t) => t.id === taskId);
     if (currentTask && currentTask.status !== newStatus) {
-      if (newStatus === "todo" || newStatus === "doing" || newStatus === "done") {
+      if (["todo", "doing", "done"].includes(newStatus)) {
         onDragEnd(taskId, newStatus);
       }
     }
   };
 
-  const todoTasks = tasks.filter(task => task.status === "todo");
-  const doingTasks = tasks.filter(task => task.status === "doing");
-  const doneTasks = tasks.filter(task => task.status === "done");
+  const todoTasks = tasks.filter((task) => task.status === "todo");
+  const doingTasks = tasks.filter((task) => task.status === "doing");
+  const doneTasks = tasks.filter((task) => task.status === "done");
 
   const renderTaskCard = (task: ExtendedTask) => (
-    <TaskCard 
+    <TaskCard
       key={task.id}
       task={{
         id: task.id,
@@ -149,16 +156,22 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
         description: task.description,
         status: task.status,
         due_date: task.due_date,
-        assignee: task.assignee ? {
-          name: task.assignee.full_name,
-          avatar_url: task.assignee.avatar_url
-        } : undefined,
-        order: task.order ? {
-          id: task.order.id,
-          client: task.order.clients ? {
-            name: task.order.clients.name
-          } : undefined
-        } : undefined
+        assignee: task.assignee
+          ? {
+              name: task.assignee.full_name,
+              avatar_url: task.assignee.avatar_url,
+            }
+          : undefined,
+        order: task.order
+          ? {
+              id: task.order.id,
+              client: task.order.clients
+                ? {
+                    name: task.order.clients.name,
+                  }
+                : undefined,
+            }
+          : undefined,
       }}
       disabled={isUpdating}
     />
@@ -173,24 +186,24 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
       onDragEnd={handleDragEnd}
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <TaskColumn 
-          id="todo"
+        <TaskColumn
+          id="column-todo"
           title="To Do"
           tasks={todoTasks}
           count={todoTasks.length}
           isUpdating={isUpdating}
         />
-        
-        <TaskColumn 
-          id="doing"
+
+        <TaskColumn
+          id="column-doing"
           title="Doing"
           tasks={doingTasks}
           count={doingTasks.length}
           isUpdating={isUpdating}
         />
-        
-        <TaskColumn 
-          id="done"
+
+        <TaskColumn
+          id="column-done"
           title="Done"
           tasks={doneTasks}
           count={doneTasks.length}
