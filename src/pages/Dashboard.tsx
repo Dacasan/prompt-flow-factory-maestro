@@ -5,17 +5,58 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { CheckSquare, ShoppingBag, TicketCheck, FileText, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useOrders } from "@/domains/orders/hooks/useOrders";
+import { useTasks } from "@/domains/tasks/hooks/useTasks";
+import { useTickets } from "@/domains/tickets/hooks/useTickets";
 
 export function Dashboard() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin" || user?.role === "admin:member";
+  const { orders } = useOrders();
+  const { tasks } = useTasks();
+  const { tickets } = useTickets();
 
-  // Mock data for the dashboard
+  // Calculate real stats
+  const activeOrders = orders.filter(order => 
+    order.status === 'pending' || order.status === 'in_progress'
+  );
+  const pendingTasks = tasks.filter(task => 
+    task.status === 'to_do' || task.status === 'in_progress'
+  );
+  const openTickets = tickets.filter(ticket => ticket.status === 'open');
+  const recentOrders = orders.slice(0, 5);
+  const recentTasks = tasks.slice(0, 3);
+  const recentTickets = tickets.slice(0, 3);
+
   const stats = [
-    { title: "Active Orders", value: "5", icon: ShoppingBag, href: "/orders", color: "bg-blue-50 text-blue-600" },
-    { title: "Pending Tasks", value: "12", icon: CheckSquare, href: "/tasks", color: "bg-amber-50 text-amber-600" },
-    { title: "Open Tickets", value: "3", icon: TicketCheck, href: "/tickets", color: "bg-red-50 text-red-600" },
-    { title: "Unpaid Invoices", value: "2", icon: FileText, href: "/invoices", color: "bg-green-50 text-green-600" },
+    { 
+      title: "Active Orders", 
+      value: activeOrders.length.toString(), 
+      icon: ShoppingBag, 
+      href: "/orders", 
+      color: "bg-blue-50 text-blue-600" 
+    },
+    { 
+      title: "Pending Tasks", 
+      value: pendingTasks.length.toString(), 
+      icon: CheckSquare, 
+      href: "/tasks", 
+      color: "bg-amber-50 text-amber-600" 
+    },
+    { 
+      title: "Open Tickets", 
+      value: openTickets.length.toString(), 
+      icon: TicketCheck, 
+      href: "/tickets", 
+      color: "bg-red-50 text-red-600" 
+    },
+    { 
+      title: "Total Orders", 
+      value: orders.length.toString(), 
+      icon: FileText, 
+      href: "/orders", 
+      color: "bg-green-50 text-green-600" 
+    },
   ];
 
   return (
@@ -57,17 +98,24 @@ export function Dashboard() {
             <CardDescription>Your tasks that need attention</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                <div>
-                  <p className="font-medium">Task {i + 1}</p>
-                  <p className="text-sm text-muted-foreground">Due in {i + 1} days</p>
+            {recentTasks.length > 0 ? (
+              recentTasks.map((task) => (
+                <div key={task.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                  <div>
+                    <p className="font-medium">{task.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Status: {task.status} 
+                      {task.due_date && ` - Due: ${new Date(task.due_date).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    View
+                  </Button>
                 </div>
-                <Button variant="ghost" size="sm">
-                  View
-                </Button>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-muted-foreground">No tasks to display.</p>
+            )}
           </CardContent>
           <CardFooter>
             <Link to="/tasks">
@@ -77,23 +125,30 @@ export function Dashboard() {
             </Link>
           </CardFooter>
         </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Recent Tickets</CardTitle>
             <CardDescription>Support tickets awaiting response</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                <div>
-                  <p className="font-medium">Ticket {i + 1}</p>
-                  <p className="text-sm text-muted-foreground">Created {i + 1} days ago</p>
+            {recentTickets.length > 0 ? (
+              recentTickets.map((ticket) => (
+                <div key={ticket.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                  <div>
+                    <p className="font-medium">{ticket.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Status: {ticket.status} - {new Date(ticket.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    View
+                  </Button>
                 </div>
-                <Button variant="ghost" size="sm">
-                  View
-                </Button>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-muted-foreground">No tickets to display.</p>
+            )}
           </CardContent>
           <CardFooter>
             <Link to="/tickets">
@@ -113,20 +168,29 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                  <div>
-                    <p className="font-medium">Order #{1000 + i}</p>
-                    <p className="text-sm text-muted-foreground">Client {i + 1}</p>
+              {recentOrders.length > 0 ? (
+                recentOrders.map((order) => (
+                  <div key={order.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                    <div>
+                      <p className="font-medium">Order #{order.id?.slice(-8)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.clients?.name || 'Unknown Client'} - {order.services?.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Status: {order.status}
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-sm mr-4">${order.total_amount}</span>
+                      <Button variant="ghost" size="sm">
+                        Details
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-4">${(100 * (i + 1)).toFixed(2)}</span>
-                    <Button variant="ghost" size="sm">
-                      Details
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-muted-foreground">No orders to display.</p>
+              )}
             </div>
           </CardContent>
           <CardFooter>

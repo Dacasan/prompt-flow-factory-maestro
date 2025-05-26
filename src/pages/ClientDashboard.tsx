@@ -5,10 +5,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Package, FileText, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useOrders } from "@/domains/orders/hooks/useOrders";
+import { useTickets } from "@/domains/tickets/hooks/useTickets";
 
 export const ClientDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { orders } = useOrders();
+  const { tickets } = useTickets();
+
+  // Filter orders for current client
+  const clientOrders = orders.filter(order => order.client_id === user?.client_id);
+  const recentOrders = clientOrders.slice(0, 3);
+  const openTickets = tickets.filter(ticket => 
+    ticket.client_id === user?.client_id && ticket.status === 'open'
+  );
 
   const quickActions = [
     {
@@ -46,7 +57,7 @@ export const ClientDashboard = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
         <p className="text-muted-foreground">
-          Hello {user?.user_metadata?.full_name || user?.email}, manage your services and orders from here.
+          Hello {user?.full_name || user?.email}, manage your services and orders from here.
         </p>
       </div>
 
@@ -73,7 +84,28 @@ export const ClientDashboard = () => {
             <CardDescription>Your latest orders and updates</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">No recent activity to display.</p>
+            {recentOrders.length > 0 ? (
+              <div className="space-y-4">
+                {recentOrders.map((order) => (
+                  <div key={order.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                    <div>
+                      <p className="font-medium">Order #{order.id?.slice(-8)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.services?.name} - ${order.total_amount}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Status: {order.status}
+                      </p>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No recent activity to display.</p>
+            )}
           </CardContent>
         </Card>
 
@@ -90,6 +122,14 @@ export const ClientDashboard = () => {
             <div className="flex justify-between">
               <span className="text-sm font-medium">Email:</span>
               <span className="text-sm">{user?.email}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Total Orders:</span>
+              <span className="text-sm">{clientOrders.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Open Tickets:</span>
+              <span className="text-sm">{openTickets.length}</span>
             </div>
           </CardContent>
         </Card>
