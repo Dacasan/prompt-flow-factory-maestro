@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   DndContext,
@@ -196,7 +197,7 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
 
         <TaskColumn
           id="column-doing"
-          title="Doing"
+          title="In Progress"
           tasks={doingTasks}
           count={doingTasks.length}
           isUpdating={isUpdating}

@@ -60,6 +60,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, disabled = false }) =>
     setIsDialogOpen(true);
   };
 
+  // Helper function to format status for display
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case 'todo':
+        return 'To Do';
+      case 'doing':
+        return 'In Progress';
+      case 'done':
+        return 'Done';
+      default:
+        return status.replace('_', ' ');
+    }
+  };
+
   return (
     <>
       <Card 
@@ -129,7 +143,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, disabled = false }) =>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-medium">Status:</span>
-                <p className="text-muted-foreground capitalize">{task.status.replace('_', ' ')}</p>
+                <p className="text-muted-foreground">{formatStatus(task.status)}</p>
               </div>
               
               {task.due_date && (
