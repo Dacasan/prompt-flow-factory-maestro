@@ -21,7 +21,7 @@ export function Dashboard() {
     order.status === 'pending' || order.status === 'in_progress'
   );
   const pendingTasks = tasks.filter(task => 
-    task.status === 'todo' || task.status === 'doing'
+    task.status === 'todo' || task.status === 'in_progress'
   );
   const openTickets = tickets.filter(ticket => ticket.status === 'open');
   const recentOrders = orders.slice(0, 5);
