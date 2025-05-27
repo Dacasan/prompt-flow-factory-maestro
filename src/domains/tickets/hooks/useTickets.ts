@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,7 +37,8 @@ export function useTickets() {
   const { clients } = useClients();
   
   const getTickets = async () => {
-    const { data, error } = await supabase
+    console.log("Fetching tickets...");
+    const { data: rawData, error } = await supabase
       .from('tickets')
       .select(`
         *,
@@ -49,10 +49,13 @@ export function useTickets() {
       .order('created_at', { ascending: false });
     
     if (error) {
+      console.error("Error fetching tickets:", error);
       throw new Error(error.message);
     }
     
-    const typedData = (data || []).map(ticket => {
+    console.log("Raw tickets data:", rawData);
+    
+    const typedData = (rawData || []).map(ticket => {
       const safeProfilesData = () => {
         if (ticket.profiles == null) return undefined;
         if (typeof ticket.profiles !== 'object') return undefined;
@@ -105,6 +108,7 @@ export function useTickets() {
       } as ExtendedTicket;
     });
     
+    console.log("Processed tickets:", typedData);
     return typedData;
   };
   
@@ -119,6 +123,7 @@ export function useTickets() {
     client_id?: string;
     assigned_to?: string;
   }) => {
+    console.log("Creating ticket with data:", ticketData);
     // Get the first admin user to assign tickets to
     const { data: adminUser } = await supabase
       .from('profiles')
@@ -126,24 +131,32 @@ export function useTickets() {
       .in('role', ['admin', 'admin:member'])
       .limit(1)
       .single();
+    
+    console.log("Found admin user for assignment:", adminUser);
+
+    const insertData = {
+      title: ticketData.title,
+      description: ticketData.description || null,
+      client_id: ticketData.client_id || user?.client_id || '',
+      created_by: user?.id,
+      assigned_to: adminUser?.id || null, 
+      status: 'open'
+    };
+    
+    console.log("Inserting ticket with data:", insertData);
 
     const { data, error } = await supabase
       .from('tickets')
-      .insert({
-        title: ticketData.title,
-        description: ticketData.description || null,
-        client_id: ticketData.client_id || user?.client_id || '',
-        created_by: user?.id,
-        assigned_to: adminUser?.id || null,
-        status: 'open'
-      })
+      .insert(insertData)
       .select()
       .single();
     
     if (error) {
+      console.error("Error creating ticket:", error);
       throw new Error(error.message);
     }
     
+    console.log("Ticket created successfully:", data);
     return data;
   };
   

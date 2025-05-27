@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,26 +144,48 @@ export function useTasks() {
   }
   
   const updateTaskStatus = async ({ id, status }: TaskStatusUpdateData) => {
-    console.log(`Updating task ${id} status to ${status}`);
+    console.log(`Updating task ${id} status to ${status} (will be mapped to DB status)`);
     // Convert UI status to database status before saving
     const dbStatus = mapUiStatusToDbStatus(status);
     
+    console.log(`Mapped status for database: ${dbStatus}`);
+    
+    // First check if the task exists
+    const { data: existingTask, error: checkError } = await supabase
+      .from('tasks')
+      .select('id, status')
+      .eq('id', id)
+      .single();
+    
+    if (checkError) {
+      console.error("Error checking task:", checkError);
+      throw new Error(checkError.message);
+    }
+    
+    console.log("Existing task:", existingTask);
+    
+    // Now update the status
     const { data, error } = await supabase
       .from('tasks')
       .update({ status: dbStatus })
       .eq('id', id)
-      .select()
-      .single();
+      .select();
     
     if (error) {
       console.error("Error updating task status:", error);
-      throw new Error(error.message);
+      throw new Error(`Error updating task status: ${error.message}`);
     }
+    
+    if (!data || data.length === 0) {
+      throw new Error("Task update failed: no data returned");
+    }
+    
+    console.log("Updated task:", data[0]);
     
     // Map the updated task to include UI status
     return {
-      ...data,
-      status: mapDbStatusToUiStatus(data.status)
+      ...data[0],
+      status: mapDbStatusToUiStatus(data[0].status)
     } as Task;
   };
   

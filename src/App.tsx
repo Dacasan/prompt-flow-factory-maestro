@@ -21,6 +21,8 @@ import { ClientDashboard } from "./pages/ClientDashboard";
 import { ClientServices } from "./pages/ClientServices";
 import { ClientInvoices } from "./pages/ClientInvoices";
 import { Invoices } from "./pages/Invoices";
+import { Support } from "./pages/Support";
+import { ClientSupport } from "./pages/ClientSupport";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +68,13 @@ const App = () => (
               <ProtectedRoute requiredRole="client">
                 <AppLayout>
                   <ClientInvoices />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/client/support" element={
+              <ProtectedRoute requiredRole="client">
+                <AppLayout>
+                  <ClientSupport />
                 </AppLayout>
               </ProtectedRoute>
             } />
@@ -127,8 +136,8 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/support" element={
-              <ProtectedRoute>
-                <AppLayout><div>Support Page</div></AppLayout>
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout><Support /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/settings" element={

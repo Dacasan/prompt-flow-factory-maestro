@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Table,
@@ -12,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, Eye } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface InvoicesTableProps {
   invoices: Array<{
@@ -47,6 +47,48 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({ invoices }) => {
       return format(new Date(dateString), "PP");
     } catch (e) {
       return "Invalid date";
+    }
+  };
+
+  const handleDownload = (invoice: { id: string; number: string; pdf_url?: string }) => {
+    // In a real app, this would generate and download a PDF
+    // For now, we'll simulate the functionality
+    if (invoice.pdf_url) {
+      // If we have a PDF URL, we would redirect to it
+      window.open(invoice.pdf_url, '_blank');
+    } else {
+      // Otherwise, we'd generate a PDF on the fly
+      toast.success(`Invoice ${invoice.number} is being generated for download`);
+      
+      // Create a demo PDF download
+      setTimeout(() => {
+        const dummyContent = `
+          Invoice #${invoice.number}
+          This is a sample invoice PDF content
+          Generated on ${new Date().toLocaleString()}
+        `;
+        
+        const blob = new Blob([dummyContent], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${invoice.number}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast.success(`Invoice ${invoice.number} downloaded successfully`);
+      }, 1000);
+    }
+  };
+
+  const handleView = (invoice: { id: string; number: string; pdf_url?: string }) => {
+    if (invoice.pdf_url) {
+      window.open(invoice.pdf_url, '_blank');
+    } else {
+      toast.info(`Generating invoice preview for ${invoice.number}`);
+      // In a real app, this would show a PDF viewer
     }
   };
 
@@ -96,13 +138,11 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({ invoices }) => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    {invoice.pdf_url && (
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                    )}
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleView(invoice)}>
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleDownload(invoice)}>
                       <Download className="h-4 w-4 mr-1" />
                       Download
                     </Button>
