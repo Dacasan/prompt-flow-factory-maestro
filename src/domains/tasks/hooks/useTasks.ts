@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,11 +145,16 @@ export function useTasks() {
   }
   
   const updateTaskStatus = async ({ id, status }: TaskStatusUpdateData) => {
-    console.log(`Updating task ${id} status to ${status} (will be mapped to DB status)`);
+    console.log(`Updating task ${id} status to ${status} (UI status)`);
+    
+    // Validate that the UI status is one we support
+    if (!['todo', 'doing', 'done'].includes(status)) {
+      throw new Error(`Invalid status: ${status}. Must be one of: todo, doing, done`);
+    }
+    
     // Convert UI status to database status before saving
     const dbStatus = mapUiStatusToDbStatus(status);
-    
-    console.log(`Mapped status for database: ${dbStatus}`);
+    console.log(`Mapped to database status: ${dbStatus}`);
     
     // First check if the task exists
     const { data: existingTask, error: checkError } = await supabase
