@@ -17,14 +17,14 @@ interface Message {
 }
 
 // Demo messages for now - in a real app, these would come from the database
-const demoMessages = (clientId: string, adminId: string) => [
+const demoMessages = (clientId: string, adminId: string): Message[] => [
   {
     id: '1',
     content: 'Hello! How can I help you today?',
     sender: {
       id: adminId,
       name: 'Support Agent',
-      role: 'admin'
+      role: 'admin' as const
     },
     timestamp: new Date(Date.now() - 1000 * 60 * 24) // 24 minutes ago
   },
@@ -34,7 +34,7 @@ const demoMessages = (clientId: string, adminId: string) => [
     sender: {
       id: clientId,
       name: 'Client',
-      role: 'client'
+      role: 'client' as const
     },
     timestamp: new Date(Date.now() - 1000 * 60 * 23) // 23 minutes ago
   },
@@ -44,7 +44,7 @@ const demoMessages = (clientId: string, adminId: string) => [
     sender: {
       id: adminId,
       name: 'Support Agent',
-      role: 'admin'
+      role: 'admin' as const
     },
     timestamp: new Date(Date.now() - 1000 * 60 * 20) // 20 minutes ago
   }
@@ -56,7 +56,7 @@ export function useSupportChat(clientId?: string) {
   
   // In a real app, this would fetch messages from the database
   // For now, we'll use demo data
-  const getMessages = async () => {
+  const getMessages = async (): Promise<Message[]> => {
     // In a real implementation, we'd fetch from the database
     // const { data, error } = await supabase
     //   .from('chat_messages')
@@ -79,7 +79,7 @@ export function useSupportChat(clientId?: string) {
     queryFn: getMessages,
   });
   
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string): Promise<Message> => {
     if (!user) throw new Error("User must be logged in to send messages");
     
     // In a real app, this would save to the database
@@ -98,14 +98,14 @@ export function useSupportChat(clientId?: string) {
     // return data;
     
     // For demo purposes, return a mock message
-    const newMessage = {
+    const newMessage: Message = {
       id: Date.now().toString(),
       content,
       sender: {
         id: user.id,
         name: user.full_name || 'User',
         avatar: user.avatar_url,
-        role: user.role === 'client' ? 'client' : 'admin' as 'client' | 'admin'
+        role: (user.role === 'client' ? 'client' : 'admin') as 'client' | 'admin'
       },
       timestamp: new Date()
     };
@@ -120,14 +120,14 @@ export function useSupportChat(clientId?: string) {
     mutationFn: sendMessage,
     onMutate: async (content) => {
       // Optimistic update
-      const newMessage = {
+      const newMessage: Message = {
         id: `temp-${Date.now()}`,
         content,
         sender: {
           id: user?.id || '',
           name: user?.full_name || 'User',
           avatar: user?.avatar_url,
-          role: user?.role === 'client' ? 'client' : 'admin' as 'client' | 'admin'
+          role: (user?.role === 'client' ? 'client' : 'admin') as 'client' | 'admin'
         },
         timestamp: new Date()
       };
