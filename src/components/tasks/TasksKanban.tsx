@@ -138,14 +138,14 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
 
     const currentTask = tasks.find((t) => t.id === taskId);
     if (currentTask && currentTask.status !== newStatus) {
-      if (["todo", "doing", "done"].includes(newStatus)) {
+      if (["todo", "in_progress", "done"].includes(newStatus)) {
         onDragEnd(taskId, newStatus);
       }
     }
   };
 
   const todoTasks = tasks.filter((task) => task.status === "todo");
-  const doingTasks = tasks.filter((task) => task.status === "doing");
+  const inProgressTasks = tasks.filter((task) => task.status === "in_progress");
   const doneTasks = tasks.filter((task) => task.status === "done");
 
   const renderTaskCard = (task: ExtendedTask) => (
@@ -196,10 +196,10 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
         />
 
         <TaskColumn
-          id="column-doing"
+          id="column-in_progress"
           title="In Progress"
-          tasks={doingTasks}
-          count={doingTasks.length}
+          tasks={inProgressTasks}
+          count={inProgressTasks.length}
           isUpdating={isUpdating}
         />
 

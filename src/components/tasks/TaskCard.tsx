@@ -65,7 +65,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, disabled = false }) =>
     switch (status) {
       case 'todo':
         return 'To Do';
-      case 'doing':
+      case 'in_progress':
         return 'In Progress';
       case 'done':
         return 'Done';

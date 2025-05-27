@@ -1,8 +1,8 @@
 
 import { z } from "zod";
 
-// Task status enum
-export const TaskStatusEnum = z.enum(["todo", "doing", "done"]);
+// Task status enum - updated to match database constraints
+export const TaskStatusEnum = z.enum(["todo", "in_progress", "done"]);
 export type TaskStatus = z.infer<typeof TaskStatusEnum>;
 
 // Task schema

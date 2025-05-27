@@ -72,7 +72,7 @@ export function useTasks() {
   const mapDbStatusToUiStatus = (dbStatus: string | null): string => {
     switch(dbStatus) {
       case 'to_do': return 'todo';
-      case 'in_progress': return 'doing';
+      case 'in_progress': return 'in_progress';
       case 'done': return 'done';
       default: return 'todo';
     }
@@ -82,7 +82,7 @@ export function useTasks() {
   const mapUiStatusToDbStatus = (uiStatus: string): string => {
     switch(uiStatus) {
       case 'todo': return 'to_do';
-      case 'doing': return 'in_progress';
+      case 'in_progress': return 'in_progress';
       case 'done': return 'done';
       default: return 'to_do';
     }
@@ -148,8 +148,8 @@ export function useTasks() {
     console.log(`Updating task ${id} status to ${status} (UI status)`);
     
     // Validate that the UI status is one we support
-    if (!['todo', 'doing', 'done'].includes(status)) {
-      throw new Error(`Invalid status: ${status}. Must be one of: todo, doing, done`);
+    if (!['todo', 'in_progress', 'done'].includes(status)) {
+      throw new Error(`Invalid status: ${status}. Must be one of: todo, in_progress, done`);
     }
     
     // Convert UI status to database status before saving
