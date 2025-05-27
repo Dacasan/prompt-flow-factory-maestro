@@ -50,7 +50,7 @@ export const Support = () => {
                     <button
                       key={client.id}
                       className={cn(
-                        "w-full flex items-center px-4 py-3 hover:bg-muted/50 transition-colors",
+                        "w-full flex items-center px-4 py-3 hover:bg-muted/50 transition-colors text-left",
                         selectedClientId === client.id && "bg-muted"
                       )}
                       onClick={() => setSelectedClientId(client.id)}
@@ -61,9 +61,9 @@ export const Support = () => {
                           {client.name.substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="text-left">
-                        <p className="font-medium">{client.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                      <div className="text-left min-w-0 flex-1">
+                        <p className="font-medium truncate">{client.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">
                           {client.email}
                         </p>
                       </div>

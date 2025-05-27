@@ -3,9 +3,21 @@ import React from "react";
 import { useSupportChat } from "@/domains/support/hooks/useSupportChat";
 import { SupportChat } from "@/components/support/SupportChat";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/domains/auth/hooks/useAuth";
 
 export const ClientSupport = () => {
+  const { user } = useAuth();
   const { messages, sendMessage, isLoading, isSending } = useSupportChat();
+
+  if (!user?.client_id) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="flex justify-center items-center h-64">
+          <p className="text-muted-foreground">No client profile found. Please contact support.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6">

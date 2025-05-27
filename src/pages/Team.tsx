@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useTeam } from "@/domains/team/hooks/useTeam";
 import { InvitationData } from "@/domains/team/types";
@@ -23,8 +22,8 @@ export const Team = () => {
     isLoading, 
     inviteTeamMember, 
     isInviting,
-    sendMagicLink = () => {}, // Provide default empty function
-    isSendingMagicLink = false // Provide default value
+    sendMagicLink,
+    isSendingMagicLink
   } = useTeam();
   
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -33,13 +32,16 @@ export const Team = () => {
   const handleInvite = (data: InvitationData) => {
     inviteTeamMember(data, {
       onSuccess: (response: any) => {
-        // Check if response exists and contains inviteLink before setting
         if (response && response.inviteLink) {
           setInvitationLink(response.inviteLink);
         } else {
-          // If no inviteLink is present, close the sheet after successful invitation
+          // Close sheet after successful invitation without link
           setIsSheetOpen(false);
+          setInvitationLink(null);
         }
+      },
+      onError: () => {
+        // Keep sheet open on error
       }
     });
   };
@@ -59,9 +61,9 @@ export const Team = () => {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Team Members</h1>
-        <Sheet open={isSheetOpen} onOpenChange={onSheetClose}>
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger asChild>
-            <Button>
+            <Button onClick={() => setIsSheetOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Invite Team Member
             </Button>
