@@ -77,7 +77,7 @@ export const Support = () => {
                           {ticket.description}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Client: {ticket.client?.name || 'Unknown'}
+                          Client: {ticket.clients?.name || 'Unknown'}
                         </p>
                       </div>
                     </button>
