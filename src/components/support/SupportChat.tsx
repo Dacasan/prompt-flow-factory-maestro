@@ -22,7 +22,6 @@ interface Message {
 }
 
 interface SupportChatProps {
-  clientId?: string; // Only needed for admin view
   messages: Message[];
   onSendMessage: (content: string) => void;
   isLoading?: boolean;

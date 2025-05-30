@@ -16,22 +16,22 @@ interface Message {
   timestamp: Date;
 }
 
-export function useSupportChat(clientId?: string) {
+export function useSupportChat(ticketId?: string) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   
   // Get messages from the database
   const getMessages = async (): Promise<Message[]> => {
-    const targetClientId = clientId || user?.client_id;
-    
-    if (!targetClientId) {
+    if (!ticketId) {
       return [];
     }
 
     const { data, error } = await supabase
       .from('support_messages')
       .select(`
-        *,
+        id,
+        content,
+        created_at,
         sender:profiles!support_messages_sender_id_fkey(
           id,
           full_name,
@@ -39,7 +39,7 @@ export function useSupportChat(clientId?: string) {
           role
         )
       `)
-      .eq('client_id', targetClientId)
+      .eq('ticket_id', ticketId)
       .order('created_at', { ascending: true });
     
     if (error) {
@@ -61,26 +61,26 @@ export function useSupportChat(clientId?: string) {
   };
   
   const { data: messages = [], isLoading, error } = useQuery({
-    queryKey: ['support-chat', clientId || user?.client_id],
+    queryKey: ['support-messages', ticketId],
     queryFn: getMessages,
-    enabled: !!(clientId || user?.client_id),
+    enabled: !!ticketId,
   });
   
   const sendMessage = async (content: string): Promise<Message> => {
     if (!user) throw new Error("User must be logged in to send messages");
-    
-    const targetClientId = clientId || user.client_id;
-    if (!targetClientId) throw new Error("No client ID available");
+    if (!ticketId) throw new Error("No ticket ID available");
     
     const { data, error } = await supabase
       .from('support_messages')
       .insert({
         content,
         sender_id: user.id,
-        client_id: targetClientId,
+        ticket_id: ticketId,
       })
       .select(`
-        *,
+        id,
+        content,
+        created_at,
         sender:profiles!support_messages_sender_id_fkey(
           id,
           full_name,
@@ -110,7 +110,7 @@ export function useSupportChat(clientId?: string) {
     onSuccess: (newMessage) => {
       // Invalidate and refetch messages
       queryClient.invalidateQueries({ 
-        queryKey: ['support-chat', clientId || user?.client_id] 
+        queryKey: ['support-messages', ticketId] 
       });
       toast.success('Message sent successfully');
     },
