@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -50,6 +49,24 @@ export function Sidebar() {
       clientOnly: true,
     },
     {
+      title: "My Tickets",
+      href: "/client/tickets",
+      icon: TicketCheck,
+      clientOnly: true,
+    },
+    {
+      title: "Support Chat",
+      href: "/client/support",
+      icon: MessageSquare,
+      clientOnly: true,
+    },
+    {
+      title: "Invoices",
+      href: "/client/invoices",
+      icon: FileText,
+      clientOnly: true,
+    },
+    {
       title: "Clients",
       href: "/clients",
       icon: Users,
@@ -74,9 +91,16 @@ export function Sidebar() {
       adminOnly: true,
     },
     {
-      title: "Tickets",
+      title: "All Tickets",
       href: "/tickets",
       icon: TicketCheck,
+      adminOnly: true,
+    },
+    {
+      title: "Support Center",
+      href: "/support",
+      icon: MessageSquare,
+      adminOnly: true,
     },
     {
       title: "Invoices",
@@ -95,11 +119,6 @@ export function Sidebar() {
       href: "/team",
       icon: Users,
       adminOnly: true,
-    },
-    {
-      title: "Support",
-      href: "/support",
-      icon: MessageSquare,
     },
     {
       title: "Settings",

@@ -23,6 +23,9 @@ import { ClientInvoices } from "./pages/ClientInvoices";
 import { Invoices } from "./pages/Invoices";
 import { Support } from "./pages/Support";
 import { ClientSupport } from "./pages/ClientSupport";
+import { Settings } from "./pages/Settings";
+import { Marketing } from "./pages/Marketing";
+import { Subscriptions } from "./pages/Subscriptions";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -123,9 +126,14 @@ const App = () => (
                 <AppLayout><Invoices /></AppLayout>
               </ProtectedRoute>
             } />
+            <Route path="/subscriptions" element={
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout><Subscriptions /></AppLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/marketing" element={
               <ProtectedRoute requiredRole="admin">
-                <AppLayout><div>Marketing Page</div></AppLayout>
+                <AppLayout><Marketing /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/team" element={
@@ -142,7 +150,7 @@ const App = () => (
             } />
             <Route path="/settings" element={
               <ProtectedRoute>
-                <AppLayout><div>Settings Page</div></AppLayout>
+                <AppLayout><Settings /></AppLayout>
               </ProtectedRoute>
             } />
             

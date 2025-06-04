@@ -3,11 +3,14 @@ import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckSquare, ShoppingBag, TicketCheck, FileText, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ArrowRight, Calendar, Clock, DollarSign } from "lucide-react";
 import { useOrders } from "@/domains/orders/hooks/useOrders";
 import { useTasks } from "@/domains/tasks/hooks/useTasks";
 import { useTickets } from "@/domains/tickets/hooks/useTickets";
+import { MetricsOverview } from "@/components/dashboard/MetricsOverview";
+import { RevenueChart } from "@/components/dashboard/RevenueChart";
+import { TasksProgress } from "@/components/dashboard/TasksProgress";
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -16,190 +19,186 @@ export function Dashboard() {
   const { tasks } = useTasks();
   const { tickets } = useTickets();
 
-  // Calculate real stats
+  // Calculate metrics
+  const totalRevenue = orders.reduce((sum, order) => {
+    return sum + (parseFloat(order.total_amount?.toString() || "0"));
+  }, 0);
+
   const activeOrders = orders.filter(order => 
     order.status === 'pending' || order.status === 'in_progress'
   );
-  const pendingTasks = tasks.filter(task => 
-    task.status === 'todo' || task.status === 'in_progress'
-  );
+  
+  const completedTasks = tasks.filter(task => task.status === 'done');
+  const inProgressTasks = tasks.filter(task => task.status === 'in_progress');
+  const todoTasks = tasks.filter(task => task.status === 'todo');
+  
   const openTickets = tickets.filter(ticket => ticket.status === 'open');
-  const recentOrders = orders.slice(0, 5);
+  const recentOrders = orders.slice(0, 3);
   const recentTasks = tasks.slice(0, 3);
-  const recentTickets = tickets.slice(0, 3);
+  const urgentTickets = tickets.filter(ticket => ticket.status === 'open').slice(0, 3);
 
-  const stats = [
-    { 
-      title: "Active Orders", 
-      value: activeOrders.length.toString(), 
-      icon: ShoppingBag, 
-      href: "/orders", 
-      color: "bg-blue-50 text-blue-600" 
-    },
-    { 
-      title: "Pending Tasks", 
-      value: pendingTasks.length.toString(), 
-      icon: CheckSquare, 
-      href: "/tasks", 
-      color: "bg-amber-50 text-amber-600" 
-    },
-    { 
-      title: "Open Tickets", 
-      value: openTickets.length.toString(), 
-      icon: TicketCheck, 
-      href: "/tickets", 
-      color: "bg-red-50 text-red-600" 
-    },
-    { 
-      title: "Total Orders", 
-      value: orders.length.toString(), 
-      icon: FileText, 
-      href: "/orders", 
-      color: "bg-green-50 text-green-600" 
-    },
-  ];
+  // Mock data for demonstration (in real app this would come from analytics)
+  const dashboardStats = {
+    totalRevenue: Math.round(totalRevenue),
+    revenueChange: 12.5,
+    activeClients: new Set(orders.map(order => order.client_id)).size,
+    clientsChange: 8.2,
+    completedTasks: completedTasks.length,
+    tasksChange: 15.3,
+    openTickets: openTickets.length,
+    ticketsChange: -5.1, // negative is good for tickets
+  };
+
+  const tasksProgressData = {
+    total: tasks.length,
+    completed: completedTasks.length,
+    inProgress: inProgressTasks.length,
+    todo: todoTasks.length,
+  };
 
   return (
     <div className="space-y-6 px-4 sm:px-6">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {user?.full_name || "User"}!
+          Welcome back, {user?.full_name || "User"}! Here's what's happening with your business.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <div className={`p-2 rounded-full ${stat.color}`}>
-                <stat.icon className="h-4 w-4" />
-              </div>
+      <MetricsOverview stats={dashboardStats} />
+
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
+        <RevenueChart />
+        <TasksProgress tasks={tasksProgressData} />
+      </div>
+
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
+        {/* Recent Orders */}
+        {isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Recent Orders
+              </CardTitle>
+              <CardDescription>Latest orders from clients</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+            <CardContent className="space-y-4">
+              {recentOrders.length > 0 ? (
+                recentOrders.map((order) => (
+                  <div key={order.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">
+                        Order #{order.id?.slice(-8)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {order.clients?.name || 'Unknown Client'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">${order.total_amount}</p>
+                      <p className="text-xs text-muted-foreground">{order.status}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No recent orders</p>
+              )}
             </CardContent>
             <CardFooter>
-              <Link to={stat.href} className="w-full">
-                <Button variant="ghost" size="sm" className="gap-1 w-full justify-start">
-                  View all <ArrowRight className="ml-1 h-4 w-4" />
+              <Link to="/orders" className="w-full">
+                <Button variant="outline" size="sm" className="w-full">
+                  View All Orders <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </CardFooter>
           </Card>
-        ))}
-      </div>
+        )}
 
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+        {/* Recent Tasks */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Tasks</CardTitle>
-            <CardDescription>Your tasks that need attention</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Recent Tasks
+            </CardTitle>
+            <CardDescription>Tasks that need your attention</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {recentTasks.length > 0 ? (
               recentTasks.map((task) => (
-                <div key={task.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 last:border-0 last:pb-0 gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{task.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Status: {task.status} 
-                      {task.due_date && ` - Due: ${new Date(task.due_date).toLocaleDateString()}`}
-                    </p>
+                <div key={task.id} className="space-y-2 border-b pb-3 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium truncate">{task.title}</p>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      task.status === 'done' ? 'bg-green-100 text-green-800' :
+                      task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {task.status}
+                    </span>
                   </div>
-                  <Button variant="ghost" size="sm" className="self-start sm:self-center">
-                    View
-                  </Button>
+                  {task.due_date && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Due: {new Date(task.due_date).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground">No tasks to display.</p>
+              <p className="text-sm text-muted-foreground">No recent tasks</p>
             )}
           </CardContent>
           <CardFooter>
             <Link to="/tasks" className="w-full">
               <Button variant="outline" size="sm" className="w-full">
-                View All Tasks
+                View All Tasks <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </CardFooter>
         </Card>
 
+        {/* Urgent Tickets */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Tickets</CardTitle>
-            <CardDescription>Support tickets awaiting response</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Urgent Tickets
+            </CardTitle>
+            <CardDescription>Support tickets requiring immediate attention</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentTickets.length > 0 ? (
-              recentTickets.map((ticket) => (
-                <div key={ticket.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 last:border-0 last:pb-0 gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{ticket.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Status: {ticket.status} - {new Date(ticket.created_at).toLocaleDateString()}
-                    </p>
+            {urgentTickets.length > 0 ? (
+              urgentTickets.map((ticket) => (
+                <div key={ticket.id} className="space-y-2 border-b pb-3 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium truncate">{ticket.title}</p>
+                    <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800">
+                      {ticket.status}
+                    </span>
                   </div>
-                  <Button variant="ghost" size="sm" className="self-start sm:self-center">
-                    View
-                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Client: {ticket.clients?.name || 'Unknown'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Created: {new Date(ticket.created_at).toLocaleDateString()}
+                  </p>
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground">No tickets to display.</p>
+              <p className="text-sm text-muted-foreground">No urgent tickets</p>
             )}
           </CardContent>
           <CardFooter>
-            <Link to="/tickets" className="w-full">
+            <Link to={isAdmin ? "/support" : "/client/support"} className="w-full">
               <Button variant="outline" size="sm" className="w-full">
-                View All Tickets
+                View All Tickets <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </CardFooter>
         </Card>
       </div>
-
-      {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
-            <CardDescription>Latest orders from clients</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentOrders.length > 0 ? (
-                recentOrders.map((order) => (
-                  <div key={order.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 last:border-0 last:pb-0 gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">Order #{order.id?.slice(-8)}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {order.clients?.name || 'Unknown Client'} - {order.services?.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Status: {order.status}
-                      </p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium">${order.total_amount}</span>
-                      <Button variant="ghost" size="sm">
-                        Details
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground">No orders to display.</p>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Link to="/orders" className="w-full">
-              <Button variant="outline" className="w-full">View All Orders</Button>
-            </Link>
-          </CardFooter>
-        </Card>
-      )}
     </div>
   );
 }
