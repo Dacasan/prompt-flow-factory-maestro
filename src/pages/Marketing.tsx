@@ -11,7 +11,7 @@ import {
   Mail, 
   TrendingUp, 
   Eye, 
-  Click, 
+  MousePointer, 
   Star,
   MessageSquare,
   Target,
