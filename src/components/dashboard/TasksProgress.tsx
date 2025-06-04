@@ -8,6 +8,7 @@ interface TasksProgressProps {
   tasks: {
     total: number;
     completed: number;
+    wip: number;
     todo: number;
   };
 }
@@ -34,6 +35,7 @@ export const TasksProgress = ({ tasks }: TasksProgressProps) => {
         <div className="flex justify-between items-center pt-2 border-t">
           <div className="flex gap-2">
             <Badge variant="outline">{tasks.todo} To Do</Badge>
+            <Badge variant="secondary">{tasks.wip} WIP</Badge>
             <Badge>{tasks.completed} Done</Badge>
           </div>
         </div>

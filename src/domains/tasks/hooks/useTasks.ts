@@ -72,7 +72,7 @@ export function useTasks() {
   const mapDbStatusToUiStatus = (dbStatus: string | null): string => {
     switch(dbStatus) {
       case 'to_do': return 'todo';
-      case 'in_progress': return 'in_progress';
+      case 'in_progress': return 'wip';
       case 'done': return 'done';
       default: return 'todo';
     }
@@ -82,7 +82,7 @@ export function useTasks() {
   const mapUiStatusToDbStatus = (uiStatus: string): string => {
     switch(uiStatus) {
       case 'todo': return 'to_do';
-      case 'in_progress': return 'in_progress';
+      case 'wip': return 'in_progress';
       case 'done': return 'done';
       default: return 'to_do';
     }
@@ -148,23 +148,13 @@ export function useTasks() {
     console.log(`Updating task ${id} status to ${status} (UI status)`);
     
     // Validate that the UI status is one we support
-    if (!['todo', 'in_progress', 'done'].includes(status)) {
-      throw new Error(`Invalid status: ${status}. Must be one of: todo, in_progress, done`);
+    if (!['todo', 'wip', 'done'].includes(status)) {
+      throw new Error(`Invalid status: ${status}. Must be one of: todo, wip, done`);
     }
     
     // Convert UI status to database status before saving
     const dbStatus = mapUiStatusToDbStatus(status);
     console.log(`Mapped to database status: ${dbStatus}`);
-    
-    // Check what statuses are actually allowed in the database
-    const allowedDbStatuses = ['to_do', 'done']; // Based on the constraint error, only these seem to be allowed
-    
-    // If trying to set in_progress but database doesn't support it, use to_do instead
-    const finalDbStatus = dbStatus === 'in_progress' && !allowedDbStatuses.includes('in_progress') 
-      ? 'to_do' 
-      : dbStatus;
-    
-    console.log(`Final database status: ${finalDbStatus}`);
     
     // First check if the task exists
     const { data: existingTask, error: checkError } = await supabase
@@ -183,7 +173,7 @@ export function useTasks() {
     // Now update the status
     const { data, error } = await supabase
       .from('tasks')
-      .update({ status: finalDbStatus })
+      .update({ status: dbStatus })
       .eq('id', id)
       .select();
     

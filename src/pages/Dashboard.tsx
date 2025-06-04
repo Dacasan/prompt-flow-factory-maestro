@@ -29,7 +29,7 @@ export function Dashboard() {
   );
   
   const completedTasks = tasks.filter(task => task.status === 'done');
-  const inProgressTasks = tasks.filter(task => task.status === 'in_progress');
+  const wipTasks = tasks.filter(task => task.status === 'wip');
   const todoTasks = tasks.filter(task => task.status === 'todo');
   
   const openTickets = tickets.filter(ticket => ticket.status === 'open');
@@ -52,7 +52,7 @@ export function Dashboard() {
   const tasksProgressData = {
     total: tasks.length,
     completed: completedTasks.length,
-    inProgress: inProgressTasks.length,
+    wip: wipTasks.length,
     todo: todoTasks.length,
   };
 
@@ -132,10 +132,10 @@ export function Dashboard() {
                     <p className="text-sm font-medium truncate">{task.title}</p>
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       task.status === 'done' ? 'bg-green-100 text-green-800' :
-                      task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                      task.status === 'wip' ? 'bg-blue-100 text-blue-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
-                      {task.status}
+                      {task.status === 'wip' ? 'WIP' : task.status}
                     </span>
                   </div>
                   {task.due_date && (

@@ -1,8 +1,8 @@
 
 import { z } from "zod";
 
-// Task status enum - simplified to only include statuses that work with the database constraint
-export const TaskStatusEnum = z.enum(["todo", "done"]);
+// Task status enum - adding WIP column between todo and done
+export const TaskStatusEnum = z.enum(["todo", "wip", "done"]);
 export type TaskStatus = z.infer<typeof TaskStatusEnum>;
 
 // Task schema

@@ -138,14 +138,15 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
 
     const currentTask = tasks.find((t) => t.id === taskId);
     if (currentTask && currentTask.status !== newStatus) {
-      // Only allow todo and done status updates based on database constraints
-      if (["todo", "done"].includes(newStatus)) {
+      // Allow todo, wip, and done status updates
+      if (["todo", "wip", "done"].includes(newStatus)) {
         onDragEnd(taskId, newStatus);
       }
     }
   };
 
   const todoTasks = tasks.filter((task) => task.status === "todo");
+  const wipTasks = tasks.filter((task) => task.status === "wip");
   const doneTasks = tasks.filter((task) => task.status === "done");
 
   const renderTaskCard = (task: ExtendedTask) => (
@@ -186,12 +187,20 @@ export const TasksKanban: React.FC<TasksKanbanProps> = ({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <TaskColumn
           id="column-todo"
           title="To Do"
           tasks={todoTasks}
           count={todoTasks.length}
+          isUpdating={isUpdating}
+        />
+
+        <TaskColumn
+          id="column-wip"
+          title="WIP"
+          tasks={wipTasks}
+          count={wipTasks.length}
           isUpdating={isUpdating}
         />
 
