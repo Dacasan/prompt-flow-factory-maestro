@@ -156,6 +156,16 @@ export function useTasks() {
     const dbStatus = mapUiStatusToDbStatus(status);
     console.log(`Mapped to database status: ${dbStatus}`);
     
+    // Check what statuses are actually allowed in the database
+    const allowedDbStatuses = ['to_do', 'done']; // Based on the constraint error, only these seem to be allowed
+    
+    // If trying to set in_progress but database doesn't support it, use to_do instead
+    const finalDbStatus = dbStatus === 'in_progress' && !allowedDbStatuses.includes('in_progress') 
+      ? 'to_do' 
+      : dbStatus;
+    
+    console.log(`Final database status: ${finalDbStatus}`);
+    
     // First check if the task exists
     const { data: existingTask, error: checkError } = await supabase
       .from('tasks')
@@ -173,7 +183,7 @@ export function useTasks() {
     // Now update the status
     const { data, error } = await supabase
       .from('tasks')
-      .update({ status: dbStatus })
+      .update({ status: finalDbStatus })
       .eq('id', id)
       .select();
     
