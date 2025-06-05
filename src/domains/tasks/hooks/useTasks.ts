@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus } from "../types";
@@ -26,8 +27,8 @@ const fetchTasks = async (): Promise<ExtendedTask[]> => {
     .from('tasks')
     .select(`
       *,
-      assignee:profiles!assigned_to(id, full_name, avatar_url),
-      order:orders!order_id(
+      assignee:profiles!tasks_assigned_to_fkey(id, full_name, avatar_url),
+      order:orders!tasks_order_id_fkey(
         id,
         clients(name),
         services(name)
@@ -40,11 +41,33 @@ const fetchTasks = async (): Promise<ExtendedTask[]> => {
     throw error;
   }
 
-  // Map database status to UI status
-  const mappedTasks = (data || []).map(task => ({
-    ...task,
-    status: mapDbStatusToUI(task.status) as TaskStatus
-  }));
+  // Map database status to UI status and handle relationship data safely
+  const mappedTasks = (data || []).map(task => {
+    // Safely handle assignee data
+    const assignee = task.assignee && typeof task.assignee === 'object' && !('error' in task.assignee) 
+      ? {
+          id: task.assignee.id,
+          full_name: task.assignee.full_name,
+          avatar_url: task.assignee.avatar_url
+        }
+      : undefined;
+
+    // Safely handle order data
+    const order = task.order && typeof task.order === 'object' && !('error' in task.order)
+      ? {
+          id: task.order.id,
+          clients: task.order.clients,
+          services: task.order.services
+        }
+      : undefined;
+
+    return {
+      ...task,
+      status: mapDbStatusToUI(task.status) as TaskStatus,
+      assignee,
+      order
+    };
+  });
 
   return mappedTasks;
 };
@@ -121,8 +144,13 @@ export const useTasks = () => {
   const createTaskMutation = useMutation({
     mutationFn: async (newTask: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
       const taskToInsert = {
-        ...newTask,
-        status: mapUIStatusToDb(newTask.status || 'todo')
+        title: newTask.title,
+        description: newTask.description || null,
+        order_id: newTask.order_id || null,
+        ticket_id: newTask.ticket_id || null,
+        assigned_to: newTask.assigned_to || null,
+        status: mapUIStatusToDb(newTask.status || 'todo'),
+        due_date: newTask.due_date || null
       };
 
       const { data, error } = await supabase
@@ -149,10 +177,15 @@ export const useTasks = () => {
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async ({ taskId, updates }: { taskId: string; updates: Partial<Task> }) => {
-      const updatesToSend = { ...updates };
-      if (updatesToSend.status) {
-        updatesToSend.status = mapUIStatusToDb(updatesToSend.status) as TaskStatus;
-      }
+      const updatesToSend: any = {};
+      
+      if (updates.title !== undefined) updatesToSend.title = updates.title;
+      if (updates.description !== undefined) updatesToSend.description = updates.description;
+      if (updates.order_id !== undefined) updatesToSend.order_id = updates.order_id;
+      if (updates.ticket_id !== undefined) updatesToSend.ticket_id = updates.ticket_id;
+      if (updates.assigned_to !== undefined) updatesToSend.assigned_to = updates.assigned_to;
+      if (updates.due_date !== undefined) updatesToSend.due_date = updates.due_date;
+      if (updates.status !== undefined) updatesToSend.status = mapUIStatusToDb(updates.status);
 
       const { data, error } = await supabase
         .from('tasks')
@@ -253,8 +286,13 @@ export const useCreateTask = () => {
   return useMutation({
     mutationFn: async (newTask: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
       const taskToInsert = {
-        ...newTask,
-        status: mapUIStatusToDb(newTask.status || 'todo')
+        title: newTask.title,
+        description: newTask.description || null,
+        order_id: newTask.order_id || null,
+        ticket_id: newTask.ticket_id || null,
+        assigned_to: newTask.assigned_to || null,
+        status: mapUIStatusToDb(newTask.status || 'todo'),
+        due_date: newTask.due_date || null
       };
 
       const { data, error } = await supabase
@@ -280,10 +318,15 @@ export const useUpdateTask = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ taskId, updates }: { taskId: string; updates: Partial<Task> }) => {
-      const updatesToSend = { ...updates };
-      if (updatesToSend.status) {
-        updatesToSend.status = mapUIStatusToDb(updatesToSend.status) as TaskStatus;
-      }
+      const updatesToSend: any = {};
+      
+      if (updates.title !== undefined) updatesToSend.title = updates.title;
+      if (updates.description !== undefined) updatesToSend.description = updates.description;
+      if (updates.order_id !== undefined) updatesToSend.order_id = updates.order_id;
+      if (updates.ticket_id !== undefined) updatesToSend.ticket_id = updates.ticket_id;
+      if (updates.assigned_to !== undefined) updatesToSend.assigned_to = updates.assigned_to;
+      if (updates.due_date !== undefined) updatesToSend.due_date = updates.due_date;
+      if (updates.status !== undefined) updatesToSend.status = mapUIStatusToDb(updates.status);
 
       const { data, error } = await supabase
         .from('tasks')
