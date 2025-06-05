@@ -4,19 +4,18 @@ import { Navigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Esquema para validación de formularios
+// Schema for form validation
 const loginSchema = z.object({
-  email: z.string().email("Ingresa un correo electrónico válido"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().optional(),
 });
 
@@ -25,28 +24,23 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function Auth() {
   const { user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
-  const [showPasswordField, setShowPasswordField] = useState(false);
+  const [showPasswordField, setShowPasswordField] = useState(true);
 
-  const { register: loginRegister, handleSubmit: handleLoginSubmit, formState: { errors: loginErrors } } = useForm<LoginFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const { register: signupRegister, handleSubmit: handleSignupSubmit, formState: { errors: signupErrors } } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  // Si el usuario ya está autenticado, redirigirlo al dashboard
+  // If user is already authenticated, redirect to dashboard
   if (user) {
     return <Navigate to="/" />;
   }
 
-  // Función para iniciar sesión con email mágico o contraseña
+  // Function to sign in with magic link or password
   const handleLogin = async (data: LoginFormData) => {
     setIsSubmitting(true);
     try {
       if (showPasswordField && data.password) {
-        // Autenticación con email y contraseña
+        // Authentication with email and password
         const { error } = await supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password,
@@ -54,9 +48,9 @@ export function Auth() {
         
         if (error) throw error;
         
-        toast.success("Sesión iniciada correctamente");
+        toast.success("Successfully signed in");
       } else {
-        // Autenticación con email mágico
+        // Authentication with magic link
         const { error } = await supabase.auth.signInWithOtp({
           email: data.email,
           options: {
@@ -66,44 +60,17 @@ export function Auth() {
         
         if (error) throw error;
         
-        toast.success("Se ha enviado un enlace de acceso a tu correo");
+        toast.success("Access link sent to your email");
       }
     } catch (error: any) {
-      console.error("Error de inicio de sesión:", error);
-      toast.error(error.message || "Error al iniciar sesión");
+      console.error("Login error:", error);
+      toast.error(error.message || "Error signing in");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Función para registrarse con email mágico
-  const handleSignup = async (data: LoginFormData) => {
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: data.email,
-        options: {
-          emailRedirectTo: window.location.origin,
-          // Por defecto, los nuevos usuarios tendrán el rol 'client'
-          data: {
-            full_name: data.email.split('@')[0],
-            role: 'client',
-          }
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast.success("Se ha enviado un enlace de acceso a tu correo");
-    } catch (error: any) {
-      console.error("Error de registro:", error);
-      toast.error(error.message || "Error al registrarse");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Función para alternar la visualización del campo de contraseña
+  // Function to toggle password field visibility
   const togglePasswordField = () => {
     setShowPasswordField(!showPasswordField);
   };
@@ -124,109 +91,69 @@ export function Auth() {
             FluxFlow
           </CardTitle>
           <CardDescription className="text-center">
-            Ingresa a tu cuenta o regístrate para comenzar
+            Sign in to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs 
-            defaultValue="login" 
-            value={activeTab} 
-            onValueChange={(value) => setActiveTab(value as "login" | "signup")}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Iniciar sesión</TabsTrigger>
-              <TabsTrigger value="signup">Registrarse</TabsTrigger>
-            </TabsList>
-            <TabsContent value="login">
-              <form onSubmit={handleLoginSubmit(handleLogin)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input
-                    id="login-email"
-                    placeholder="nombre@ejemplo.com"
-                    type="email"
-                    autoComplete="email"
-                    {...loginRegister("email")}
-                  />
-                  {loginErrors.email && (
-                    <p className="text-sm text-red-500">{loginErrors.email.message}</p>
-                  )}
-                </div>
-                
-                {showPasswordField && (
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Contraseña</Label>
-                    <Input
-                      id="login-password"
-                      placeholder="Ingresa tu contraseña"
-                      type="password"
-                      autoComplete="current-password"
-                      {...loginRegister("password")}
-                    />
-                    {loginErrors.password && (
-                      <p className="text-sm text-red-500">{loginErrors.password.message}</p>
-                    )}
-                  </div>
+          <form onSubmit={handleSubmit(handleLogin)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                placeholder="name@example.com"
+                type="email"
+                autoComplete="email"
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
+            </div>
+            
+            {showPasswordField && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  placeholder="Enter your password"
+                  type="password"
+                  autoComplete="current-password"
+                  {...register("password")}
+                />
+                {errors.password && (
+                  <p className="text-sm text-red-500">{errors.password.message}</p>
                 )}
-                
-                <div className="flex justify-end">
-                  <Button 
-                    type="button" 
-                    variant="link" 
-                    onClick={togglePasswordField}
-                    className="p-0"
-                  >
-                    {showPasswordField ? "Usar enlace mágico" : "Usar contraseña"}
-                  </Button>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {showPasswordField ? "Iniciando sesión..." : "Enviando..."}
-                    </>
-                  ) : (
-                    showPasswordField ? "Iniciar sesión" : "Enviar enlace de acceso"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="signup">
-              <form onSubmit={handleSignupSubmit(handleSignup)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    placeholder="nombre@ejemplo.com"
-                    type="email"
-                    autoComplete="email"
-                    {...signupRegister("email")}
-                  />
-                  {signupErrors.email && (
-                    <p className="text-sm text-red-500">{signupErrors.email.message}</p>
-                  )}
-                </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    "Crear cuenta"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+              </div>
+            )}
+            
+            <div className="flex justify-end">
+              <Button 
+                type="button" 
+                variant="link" 
+                onClick={togglePasswordField}
+                className="p-0"
+              >
+                {showPasswordField ? "Use magic link" : "Use password"}
+              </Button>
+            </div>
+            
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {showPasswordField ? "Signing in..." : "Sending..."}
+                </>
+              ) : (
+                showPasswordField ? "Sign in" : "Send access link"
+              )}
+            </Button>
+          </form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
+        <div className="p-6 pt-0">
           <div className="text-center text-sm text-gray-500">
-            Al continuar, aceptas nuestros términos de servicio y políticas de privacidad.
+            By continuing, you agree to our terms of service and privacy policy.
           </div>
-        </CardFooter>
+        </div>
       </Card>
     </div>
   );
