@@ -88,7 +88,7 @@ export function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-3xl font-bold tracking-tight text-center">
-            FluxFlow
+            AdWebCRM
           </CardTitle>
           <CardDescription className="text-center">
             Sign in to your account

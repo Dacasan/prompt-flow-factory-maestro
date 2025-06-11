@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -146,7 +147,7 @@ export function Sidebar() {
         {!collapsed && (
           <Link to={isClient ? "/client" : "/"} className="flex items-center space-x-2">
             <span className="font-bold text-xl bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-              FluxFlow
+              AdWebCRM
             </span>
           </Link>
         )}
