@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus } from "../types";
@@ -42,19 +43,19 @@ const fetchTasks = async (): Promise<ExtendedTask[]> => {
 
   // Map database status to UI status and handle relationship data safely
   const mappedTasks = (data || []).map(task => {
-    // Safely handle assignee data with proper null checking
-    const assignee = task.assignee && 
-                    task.assignee !== null && 
-                    typeof task.assignee === 'object' && 
-                    !Array.isArray(task.assignee) && 
-                    'id' in task.assignee && 
-                    'full_name' in task.assignee
-      ? {
-          id: task.assignee.id,
-          full_name: task.assignee.full_name,
-          avatar_url: task.assignee.avatar_url
-        }
-      : undefined;
+    // Safely handle assignee data with proper type checking
+    let assignee: ExtendedTask['assignee'] = undefined;
+    
+    if (task.assignee && typeof task.assignee === 'object' && !Array.isArray(task.assignee)) {
+      const assigneeData = task.assignee as any;
+      if (assigneeData.id && assigneeData.full_name) {
+        assignee = {
+          id: assigneeData.id,
+          full_name: assigneeData.full_name,
+          avatar_url: assigneeData.avatar_url
+        };
+      }
+    }
 
     // Safely handle order data
     const order = task.order && typeof task.order === 'object' && !('error' in task.order)
